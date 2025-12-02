@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateUserDto } from './create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -21,49 +21,50 @@ export class UserService {
         });
       }
 
-      async createUser(createUserDto: CreateUserDto): Promise<{ success: boolean, message: string }> {
-        const { username, email, password } = createUserDto;
-        const existingUser = await this.prisma.user.findFirst({
-          where: {
-            OR: [{ email }, { username }],
-          },
-        });
-    
-        if (existingUser) {
-          return { success: false, message: 'Email or username is already taken' };
-        }
-    
-        try {
-          const hashedPassword = await bcrypt.hash(password, 10);
-          const newUser = await this.prisma.user.create({
-            data: {
-              username,
-              email,
-              password: hashedPassword,
-            },
-          });
-          console.log('User created:', newUser);
-          return { success: true, message: 'Account successfully created' };
-        } catch (error) {
-          console.error('Prisma error:', error);
-          return { success: false, message: 'Internal server error' };
-        }
+    async signup(dto: CreateUserDto) {
+      const { username, email, password } = dto;
+
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ email }, { username }],
+        },
+      });
+
+      if (existingUser) {
+        throw new HttpException(
+          'Email or username already taken',
+          HttpStatus.BAD_REQUEST
+        );
       }
 
-    async getUserData(userId: string): Promise<any> {
-        try {
-            const userData = await this.prisma.user.findUnique({
-                where: { id: userId }
-            });
-            if (userData) {
-                return { success: true, result: userData };
-            } else {
-                return { success: false, result: null };
-            }
-        } catch (error) {
-            return { success: false, result: null };
-        }
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await this.prisma.user.create({
+        data: {
+          username,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      return { message: 'Account successfully created' };
     }
+
+
+      async getUserData(userId: string): Promise<any> {
+          try {
+              const userData = await this.prisma.user.findUnique({
+                  where: { id: userId }
+              });
+              if (userData) {
+                  return { success: true, result: userData };
+              } else {
+                  return { success: false, result: null };
+              }
+          } catch (error) {
+              return { success: false, result: null };
+          }
+      }
 
     async updateUser(updateUserDto: UpdateUserDto, userId: string): Promise<{ success: boolean, message: string }> {
         const user = await this.findById(userId);

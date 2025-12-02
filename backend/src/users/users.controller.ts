@@ -11,16 +11,10 @@ export class UserController {
     ) {}
 
     @Post('signup')
-    async signUp(@Body() createUserDto: CreateUserDto)
-    {
-        console.log('Received data:', createUserDto);
-        const result = await this.userService.createUser(createUserDto);
-
-        return {
-            status: result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST,
-            message: result.message
-        };
+    async signup(@Body() dto: CreateUserDto) {
+    return this.userService.signup(dto);
     }
+
 
     @UseGuards(JwtAuthGuard)
     @Get('logged')

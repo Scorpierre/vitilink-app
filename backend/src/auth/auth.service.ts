@@ -1,46 +1,41 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { plainToInstance } from 'class-transformer';
 import { UserService } from 'src/users/users.service';
-import { LoginDto } from './login.dto';
-import { validate } from 'class-validator';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private userService: UserService,
-        private jwtService: JwtService
-    ) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService
+  ) {}
 
-    async validateUser(email: string, password: string): Promise<{ success: boolean, message: string, result: any }> {
-        const loginDto = plainToInstance(LoginDto, { email, password });
-        const errors = await validate(loginDto);
+  async validateUser(email: string, password: string) {
+    const user = await this.userService.findOneByEmail(email);
 
-        if (errors.length > 0) {
-            const firstError = errors
-                .map(error => error.constraints)
-                .filter(constraints => constraints)
-                .flatMap(constraints => constraints ? Object.values(constraints) : [])
-                .shift();
-
-                return { success: false, message: firstError ?? "Unknown error", result: null };
-        }
-
-        const user = await this.userService.findOneByEmail(email);;
-
-        if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user;
-
-            return { success: true, message: 'Successfully logged in', result: result };
-        }
-
-        return { success: false, message: 'Invalid email or password', result: null };
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    async login(user: any): Promise<{ access_token: string }> {
-        const payload = { username: user.username, sub: user.id };
-
-        return { access_token: this.jwtService.sign(payload) };
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid email or password');
     }
+    const { password: _, ...result } = user;
+    return result;
+  }
+
+  async login(user: any): Promise<{ access_token: string }> {
+    const payload = { username: user.username, sub: user.id };
+    return { access_token: this.jwtService.sign(payload) };
+  }
+
+  async verifyToken(token: string): Promise<any> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      return decoded;
+    } catch (err) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 }

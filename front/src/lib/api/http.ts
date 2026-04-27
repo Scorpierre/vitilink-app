@@ -1,5 +1,7 @@
-export async function http(url: string, options: RequestInit = {}) {
-  const res = await fetch(`http://localhost:3000${url}`, {
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+export async function http<T = unknown>(url: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) }
@@ -11,5 +13,5 @@ export async function http(url: string, options: RequestInit = {}) {
     throw new Error(data.message || res.statusText || 'Erreur inconnue');
   }
 
-  return data;
+  return data as T;
 }

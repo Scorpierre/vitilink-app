@@ -1,23 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { user } from '../../stores/user';
-  import { AuthAPI } from '../../api/auth';
-
-  onMount(async () => {
-    if ($user) return;
-
-    try {
-      const data = await AuthAPI.me();
-      if (data.result) {
-        user.setUser(data.result);
-      } else {
-        window.location.href = '/signIn';
-      }
-    } catch (err) {
-      user.clear();
-      window.location.href = '/signIn';
-    }
-  });
+  import Navbar from '$lib/components/app/Navbar.svelte';
+  import Footer from '$lib/components/app/Footer.svelte';
 </script>
 
-<slot />
+<Navbar />
+<main class="min-h-screen pt-16 bg-stone-50">
+  <slot />
+</main>
+<Footer />

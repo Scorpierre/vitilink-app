@@ -7,20 +7,16 @@ import { UserService } from 'src/users/users.service';
 export class AuthService {
   constructor(
     private userService: UserService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(email: string, password: string) {
     const user = await this.userService.findOneByEmail(email);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
+    if (!user) throw new UnauthorizedException('Invalid email or password');
 
     const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
+    if (!passwordMatch) throw new UnauthorizedException('Invalid email or password');
+
     const { password: _, ...result } = user;
     return result;
   }
@@ -30,11 +26,13 @@ export class AuthService {
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  async verifyToken(token: string): Promise<any> {
+  async verifyToken(token: string) {
     try {
       const decoded = this.jwtService.verify(token);
-      return decoded;
-    } catch (err) {
+      const user = await this.userService.findById(decoded.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+      return user;
+    } catch {
       throw new UnauthorizedException('Invalid token');
     }
   }

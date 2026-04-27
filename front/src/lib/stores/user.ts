@@ -1,10 +1,5 @@
 import { writable } from 'svelte/store';
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-}
+import type { User } from '$lib/types';
 
 const createUserStore = () => {
   const { subscribe, set } = writable<User | null>(null);

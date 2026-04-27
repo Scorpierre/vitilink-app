@@ -13,11 +13,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  SELLER
+  BUYER
+  BOTH
+}
+
+enum CompanyType {
+  EARL
+  GAEC
+  SAS
+  SARL
+  COOPERATIVE
+  NEGOCE
+  OTHER
+}
+
 model User {
-  id             String   @id @default(uuid())
-  username       String   @unique
-  email          String   @unique
+  id             String       @id @default(uuid())
+  username       String       @unique
+  email          String       @unique
   password       String
+
+  role           UserRole     @default(BUYER)
+
+  firstName      String?
+  lastName       String?
+  phone          String?
+
+  companyName    String?
+  companyType    CompanyType?
+
+  region         String?
+  department     String?
+
+  appellations   String[]
+  grapeVarieties String[]
+  surfaceHa      Float?
+  annualVolume   Float?
+
+  soughtProducts String[]
+  soughtVolume   String?
+
   loggedServices String[]
   servicesData   Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }

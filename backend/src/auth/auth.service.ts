@@ -1,46 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { plainToInstance } from 'class-transformer';
 import { UserService } from 'src/users/users.service';
-import { LoginDto } from './login.dto';
-import { validate } from 'class-validator';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private userService: UserService,
-        private jwtService: JwtService
-    ) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+  ) {}
 
-    async validateUser(email: string, password: string): Promise<{ success: boolean, message: string, result: any }> {
-        const loginDto = plainToInstance(LoginDto, { email, password });
-        const errors = await validate(loginDto);
+  async validateUser(email: string, password: string) {
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) throw new UnauthorizedException('Invalid email or password');
 
-        if (errors.length > 0) {
-            const firstError = errors
-                .map(error => error.constraints)
-                .filter(constraints => constraints)
-                .flatMap(constraints => constraints ? Object.values(constraints) : [])
-                .shift();
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) throw new UnauthorizedException('Invalid email or password');
 
-                return { success: false, message: firstError ?? "Unknown error", result: null };
-        }
+    const { password: _, ...result } = user;
+    return result;
+  }
 
-        const user = await this.userService.findOneByEmail(email);;
+  async login(user: any): Promise<{ access_token: string }> {
+    const payload = { username: user.username, sub: user.id };
+    return { access_token: this.jwtService.sign(payload) };
+  }
 
-        if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user;
-
-            return { success: true, message: 'Successfully logged in', result: result };
-        }
-
-        return { success: false, message: 'Invalid email or password', result: null };
+  async verifyToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+      const user = await this.userService.findById(decoded.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+      return user;
+    } catch {
+      throw new UnauthorizedException('Invalid token');
     }
-
-    async login(user: any): Promise<{ access_token: string }> {
-        const payload = { username: user.username, sub: user.id };
-
-        return { access_token: this.jwtService.sign(payload) };
-    }
+  }
 }

@@ -34,3 +34,17 @@ npm-debug.log*
 # Prisma
 prisma/*.db
 prisma/*.db-journal
+
+# Docs de suivi (internes)
+docs/
+
+# Docker
+docker-compose.override.yml
+
+# Certificats SSL
+*.pem
+*.key
+*.crt
+
+# Fichiers parasites npm
+backend@*

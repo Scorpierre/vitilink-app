@@ -43,3 +43,39 @@ export interface ApiResponse<T> {
 
 export type AuthMeResponse = ApiResponse<User>;
 export type LoginResponse = ApiResponse<User>;
+
+export interface Entreprise {
+  id: string;
+  name: string;
+  type: CompanyType;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  region?: string;
+}
+
+export interface Annonce {
+  id: string;
+  title: string;
+  status: 'DRAFT' | 'PUBLISHED' | 'SOLD' | 'ARCHIVED';
+  entrepriseId: string;
+  creatorUserId: string;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  sender: { id: string; username: string };
+  conversationId: string;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  annonceId: string;
+  buyerId: string;
+  isSAV: boolean;
+  annonce: { id: string; title: string; entrepriseId: string };
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}

@@ -69,7 +69,10 @@ export class ConversationService {
       where: { id: conversationId },
       include: {
         annonce: { select: { id: true, title: true, creatorUserId: true } },
-        messages: { orderBy: { createdAt: 'asc' } },
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: { sender: { select: { id: true, username: true } } },
+        },
       },
     });
 

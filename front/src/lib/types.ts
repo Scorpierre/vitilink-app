@@ -1,6 +1,78 @@
 export type UserRole = 'SELLER' | 'BUYER' | 'BOTH';
 
-export type CompanyType = 'EARL' | 'GAEC' | 'SAS' | 'SARL' | 'COOPERATIVE' | 'NEGOCE' | 'OTHER';
+export type CompanyType =
+  | 'EARL'
+  | 'GAEC'
+  | 'SAS'
+  | 'SARL'
+  | 'COOPERATIVE'
+  | 'NEGOCE'
+  | 'OTHER';
+
+export type EntrepriseStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+
+export type DocumentType =
+  | 'USER_DOC'
+  | 'SALE_DOC'
+  | 'KBIS'
+  | 'SIRENE_NOTICE'
+  | 'VAT_CERTIFICATE'
+  | 'RIB'
+  | 'CVI_CERTIFICATE'
+  | 'IDENTITY_PROOF'
+  | 'OTHER';
+
+export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface DocumentItem {
+  id: string;
+  url: string;
+  type: DocumentType;
+  status: DocumentStatus;
+  originalName?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  label?: string;
+  comment?: string;
+  reviewedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Entreprise {
+  id: string;
+  name: string;
+  type: CompanyType;
+  status: EntrepriseStatus;
+
+  siren?: string;
+  siret?: string;
+  vatNumber?: string;
+  cviNumber?: string;
+
+  addressLine1?: string;
+  addressLine2?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+
+  region?: string;
+  department?: string;
+  appellations: string[];
+  grapeVarieties: string[];
+  surfaceHa?: number;
+  annualVolume?: number;
+  soughtProducts: string[];
+  soughtVolume?: string;
+
+  verificationNote?: string;
+  verifiedAt?: string;
+
+  documents?: DocumentItem[];
+
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface User {
   id: string;
@@ -10,16 +82,8 @@ export interface User {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  companyName?: string;
-  companyType?: CompanyType;
-  region?: string;
-  department?: string;
-  appellations: string[];
-  grapeVarieties: string[];
-  surfaceHa?: number;
-  annualVolume?: number;
-  soughtProducts: string[];
-  soughtVolume?: string;
+  entrepriseId?: string;
+  entreprise?: Entreprise | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -37,6 +101,7 @@ export interface SignupBody {
 }
 
 export interface ApiResponse<T> {
+  status?: number;
   message: string;
   result: T;
 }

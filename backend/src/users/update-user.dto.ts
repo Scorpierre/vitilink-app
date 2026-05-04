@@ -1,16 +1,20 @@
-import { IsArray, IsEnum, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { UserRole, CompanyType } from '@prisma/client';
+import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
+
+export enum UserRoleDto {
+  SELLER = 'SELLER',
+  BUYER = 'BUYER',
+  BOTH = 'BOTH',
+}
 
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Username must be at least 2 characters' })
-  @MaxLength(25, { message: 'Username cannot be more than 25 characters' })
+  @Length(2, 60)
   username?: string;
 
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  @IsEnum(UserRoleDto)
+  role?: UserRoleDto;
 
   @IsOptional()
   @IsString()
@@ -23,44 +27,4 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
-
-  @IsOptional()
-  @IsString()
-  companyName?: string;
-
-  @IsOptional()
-  @IsEnum(CompanyType)
-  companyType?: CompanyType;
-
-  @IsOptional()
-  @IsString()
-  region?: string;
-
-  @IsOptional()
-  @IsString()
-  department?: string;
-
-  @IsOptional()
-  @IsArray()
-  appellations?: string[];
-
-  @IsOptional()
-  @IsArray()
-  grapeVarieties?: string[];
-
-  @IsOptional()
-  @IsNumber()
-  surfaceHa?: number;
-
-  @IsOptional()
-  @IsNumber()
-  annualVolume?: number;
-
-  @IsOptional()
-  @IsArray()
-  soughtProducts?: string[];
-
-  @IsOptional()
-  @IsString()
-  soughtVolume?: string;
 }

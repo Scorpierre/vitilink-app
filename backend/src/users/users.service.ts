@@ -1,51 +1,103 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateUserDto } from './create-user.dto';
-import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcryptjs';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateProfileDto } from './update-user.dto';
+import { CreateUserDto } from './create-user.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  async signup(dto: CreateUserDto) {
+    const existingEmail = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingEmail) {
+      throw new BadRequestException('Cet email est déjà utilisé.');
+    }
+
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+
+    if (existingUsername) {
+      throw new BadRequestException("Ce nom d'utilisateur est déjà utilisé.");
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        username: dto.username,
+        email: dto.email,
+        password: hashedPassword,
+        role: 'BUYER',
+      },
+    });
+
+    const { password, ...userData } = user;
+    return {
+      status: 201,
+      message: 'Compte créé avec succès.',
+      result: userData,
+    };
+  }
 
   async findById(userId: string) {
-    return this.prisma.user.findUnique({ where: { id: userId } });
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        entreprise: {
+          include: {
+            documents: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
+      },
+    });
   }
 
   async findOneByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: {
+        entreprise: true,
+      },
+    });
   }
 
-  async signup(dto: CreateUserDto) {
-    const { username, email, password } = dto;
+  async updateProfile(dto: UpdateProfileDto, userId: string) {
+    if (dto.username) {
+      const existing = await this.prisma.user.findFirst({
+        where: {
+          username: dto.username,
+          NOT: { id: userId },
+        },
+      });
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: { OR: [{ email }, { username }] },
-    });
-
-    if (existingUser) {
-      throw new HttpException('Email or username already taken', HttpStatus.BAD_REQUEST);
+      if (existing) {
+        throw new BadRequestException("Ce nom d'utilisateur est déjà utilisé.");
+      }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await this.prisma.user.create({
-      data: { username, email, password: hashedPassword },
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        username: dto.username,
+        role: dto.role,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone: dto.phone,
+      },
     });
 
-    return { message: 'Account successfully created' };
-  }
+    
 
-  async updateProfile(dto: UpdateProfileDto, userId: string): Promise<{ success: boolean; message: string }> {
-    const user = await this.findById(userId);
-    if (!user) return { success: false, message: 'User not found' };
-
-    try {
-      const { ...data } = dto;
-      await this.prisma.user.update({ where: { id: userId }, data });
-      return { success: true, message: 'Profile updated successfully' };
-    } catch {
-      return { success: false, message: 'Failed to update profile' };
-    }
+    return {
+      success: true,
+      message: 'Profil utilisateur mis à jour.',
+    };
   }
 }

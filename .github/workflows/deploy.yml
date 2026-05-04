@@ -10,7 +10,6 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    environment: VITILINK_APP_PROD
 
     steps:
       - name: Deploy on server

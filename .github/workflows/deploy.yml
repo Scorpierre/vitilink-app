@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - prod
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -11,31 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Write .env file
-        run: |
-          cat <<EOF > .env
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          NODE_ENV=production
-          PORT=3000
-          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          EOF
-
-      - name: Copy files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".,!.git,!node_modules,!backend/node_modules,!front/node_modules"
-          target: /opt/vitilink
-
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -43,6 +19,17 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/vitilink
+            cd /home/ubuntu/vitilink-app
+            git pull origin prod
+            cat > .env << 'EOF'
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NODE_ENV=production
+            PORT=3000
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            EOF
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker image prune -f

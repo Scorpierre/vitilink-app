@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { EntrepriseModule } from './entreprise/entreprise.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { DocumentModule } from './document/document.module';
+import { AnnonceModule } from './annonce/annonce.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DocumentModule } from './document/document.module';
     EntrepriseModule,
     ConversationModule,
     DocumentModule,
+    AnnonceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

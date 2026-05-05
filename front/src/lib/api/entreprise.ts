@@ -1,7 +1,8 @@
 import { http } from './http';
+import type { ApiResponse, Entreprise } from '$lib/types';
 
 export const EntrepriseAPI = {
-  getMine: () =>
+  getMine: (): Promise<ApiResponse<Entreprise | null>> =>
     http('/entreprise/me'),
 
   updateMine: (body: unknown) =>

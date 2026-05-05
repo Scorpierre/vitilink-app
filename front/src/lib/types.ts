@@ -23,6 +23,7 @@ export type DocumentType =
   | 'OTHER';
 
 export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type AnnonceStatus = 'DRAFT' | 'PUBLISHED' | 'SOLD' | 'ARCHIVED';
 
 export interface DocumentItem {
   id: string;
@@ -88,6 +89,51 @@ export interface User {
   updatedAt?: string;
 }
 
+export interface Annonce {
+  id: string;
+  title: string;
+  productType?: string;
+  description?: string;
+  price?: number;
+  volume?: number;
+  volumeUnit?: string;
+  vintage?: number;
+  location?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  availabilityTiming?: string;
+  certifications: string[];
+  images: string[];
+  status: AnnonceStatus;
+  restrictToVerified: boolean;
+  creatorUserId: string;
+  entrepriseId: string;
+  entreprise?: Pick<Entreprise, 'id' | 'name' | 'type' | 'status' | 'city' | 'region' | 'country'>;
+  creator?: Pick<User, 'id' | 'username' | 'firstName' | 'lastName'>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateAnnonceBody {
+  title: string;
+  productType?: string;
+  description?: string;
+  price?: string;
+  volume?: string;
+  volumeUnit?: string;
+  vintage?: string;
+  location?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  availabilityTiming?: string;
+  certifications: string[];
+  existingImages?: string[];
+  restrictToVerified: boolean;
+  images: File[];
+}
+
 export interface LoginBody {
   email: string;
   password: string;
@@ -108,3 +154,5 @@ export interface ApiResponse<T> {
 
 export type AuthMeResponse = ApiResponse<User>;
 export type LoginResponse = ApiResponse<User>;
+export type AnnonceListResponse = ApiResponse<Annonce[]>;
+export type AnnonceResponse = ApiResponse<Annonce>;

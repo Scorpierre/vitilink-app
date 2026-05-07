@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { EntrepriseModule } from './entreprise/entreprise.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
+import { DocumentModule } from './document/document.module';
+import { AnnonceModule } from './annonce/annonce.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { MessageModule } from './message/message.module';
     EntrepriseModule,
     ConversationModule,
     MessageModule,
+    DocumentModule,
+    AnnonceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

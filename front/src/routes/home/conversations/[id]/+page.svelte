@@ -2,10 +2,10 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { ConversationAPI } from '$lib/api/conversation';
+  import { AuthAPI } from '$lib/api/auth';
   import { getSocket } from '$lib/socket';
   import { user } from '$lib/stores/user';
-  import type { Conversation, Message } from '$lib/types';
-  import { get } from 'svelte/store';
+  import type { Conversation, Message, User } from '$lib/types';
 
   const { data } = $props<{ data: { conversationId: string } }>();
   const conversationId = data.conversationId;
@@ -16,8 +16,7 @@
   let loading = $state(true);
   let error = $state('');
   let messagesEnd = $state<HTMLDivElement | null>(null);
-
-  const currentUser = get(user);
+  let currentUser = $state<User | null>(null);
 
   function scrollToBottom() {
     messagesEnd?.scrollIntoView({ behavior: 'smooth' });
@@ -26,8 +25,15 @@
   onMount(async () => {
     if (!browser) return;
     try {
-      conversation = await ConversationAPI.findOne(conversationId);
+      const [conversationData, meData] = await Promise.all([
+        ConversationAPI.findOne(conversationId),
+        AuthAPI.me().catch(() => null),
+      ]);
+
+      conversation = conversationData;
       messages = conversation.messages;
+      currentUser = meData?.result ?? null;
+      if (currentUser) user.setUser(currentUser);
 
       const socket = await getSocket();
 

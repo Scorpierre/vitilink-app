@@ -156,3 +156,39 @@ export type AuthMeResponse = ApiResponse<User>;
 export type LoginResponse = ApiResponse<User>;
 export type AnnonceListResponse = ApiResponse<Annonce[]>;
 export type AnnonceResponse = ApiResponse<Annonce>;
+
+export interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  sender: { id: string; username: string };
+  conversationId: string;
+  createdAt: string;
+}
+
+export interface ConversationParticipant {
+  id: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface Conversation {
+  id: string;
+  annonceId: string;
+  buyerId: string;
+  isSAV: boolean;
+  annonce: {
+    id: string;
+    title: string;
+    entrepriseId: string;
+    creatorUserId?: string;
+    images?: string[];
+    price?: number | null;
+    creator?: ConversationParticipant;
+  };
+  buyer?: ConversationParticipant;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}

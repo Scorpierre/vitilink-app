@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { AnnonceAPI } from '$lib/api/annonce';
   import { AuthAPI } from '$lib/api/auth';
+  import { ConversationAPI } from '$lib/api/conversation';
   import type { Annonce, User } from '$lib/types';
   import Alert from '$lib/components/utils/Alert.svelte';
   import AnnonceMeta from '$lib/components/annonces/AnnonceMeta.svelte';
@@ -18,6 +20,8 @@
   let currentUser: User | null = null;
   let loading = true;
   let error = '';
+  let contactLoading = false;
+  let contactError = '';
   let selectedImage = '';
   let fullscreenOpen = false;
 
@@ -70,13 +74,27 @@
     if (event.key === 'ArrowLeft') showImage(-1);
     if (event.key === 'ArrowRight') showImage(1);
   }
+
+  async function contactSeller() {
+    if (!annonce) return;
+    contactLoading = true;
+    contactError = '';
+    try {
+      const conversation = await ConversationAPI.create(annonce.id);
+      await goto(`/home/conversations/${conversation.id}`);
+    } catch (e) {
+      contactError = e instanceof Error ? e.message : 'Impossible de contacter le vendeur.';
+    } finally {
+      contactLoading = false;
+    }
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
   {#if loading}
-    <div class="flex items-center justify-center py-24 text-sm text-zinc-400">Chargement de l’annonce...</div>
+    <div class="flex items-center justify-center py-24 text-sm text-zinc-400">Chargement de l'annonce...</div>
   {:else if error}
     <Alert type="error" message={error} />
   {:else if annonce}
@@ -200,13 +218,23 @@
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
             {#if isMine}
-              <a href={`/home/mes-annonces/${annonce.id}/edit`} class="btn-primary">Modifier l’annonce</a>
+              <a href={`/home/mes-annonces/${annonce.id}/edit`} class="btn-primary">Modifier l'annonce</a>
               <a href="/home/mes-annonces" class="btn-secondary">Retour à mes annonces</a>
             {:else}
-              <a href="/home/messages" class="btn-primary">Contacter le producteur</a>
+              <button
+                type="button"
+                on:click={contactSeller}
+                disabled={contactLoading}
+                class="btn-primary disabled:opacity-50"
+              >
+                {contactLoading ? 'Connexion...' : 'Contacter le producteur'}
+              </button>
               <a href="/home/marche" class="btn-secondary">Retour aux annonces</a>
             {/if}
           </div>
+          {#if contactError}
+            <p class="mt-2 text-sm text-red-600">{contactError}</p>
+          {/if}
           </div>
         </div>
       </section>

@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EntrepriseModule } from './entreprise/entreprise.module';
 import { ConversationModule } from './conversation/conversation.module';
+import { MessageModule } from './message/message.module';
 import { DocumentModule } from './document/document.module';
 import { AnnonceModule } from './annonce/annonce.module';
 
@@ -16,6 +17,7 @@ import { AnnonceModule } from './annonce/annonce.module';
     AuthModule,
     EntrepriseModule,
     ConversationModule,
+    MessageModule,
     DocumentModule,
     AnnonceModule,
   ],

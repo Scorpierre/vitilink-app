@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AnnonceStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -57,6 +58,7 @@ export class AnnonceService {
   }
 
   async listMine(userId: string) {
+    if (!userId) throw new UnauthorizedException('Non authentifié.');
     return this.prisma.annonce.findMany({
       where: { creatorUserId: userId },
       include: {
@@ -110,6 +112,7 @@ export class AnnonceService {
   }
 
   async create(userId: string, dto: CreateAnnonceDto, files: any[] = []) {
+    if (!userId) throw new UnauthorizedException('Non authentifié.');
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { entreprise: true },

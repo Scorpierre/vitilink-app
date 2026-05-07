@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -14,12 +13,23 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import * as fs from 'fs';
-import * as path from 'path';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AnnonceService } from './annonce.service';
 import { CreateAnnonceDto } from './dto/create-annonce.dto';
 import { UpdateAnnonceDto } from './dto/update-annonce.dto';
+import {
+  annonceDestination,
+  annonceFilename,
+  annonceFileFilter,
+} from 'src/common/multer.helpers';
+
+const annonceStorage = diskStorage({ destination: annonceDestination, filename: annonceFilename });
+
+const annonceInterceptor = FilesInterceptor('images', 8, {
+  storage: annonceStorage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: annonceFileFilter,
+});
 
 @Controller('annonces')
 @UseGuards(JwtAuthGuard)
@@ -49,29 +59,7 @@ export class AnnonceController {
   }
 
   @Post()
-  @UseInterceptors(
-    FilesInterceptor('images', 8, {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          const uploadPath = path.resolve(process.cwd(), 'uploads/annonces');
-          fs.mkdirSync(uploadPath, { recursive: true });
-          cb(null, uploadPath);
-        },
-        filename: (_req, file, cb) => {
-          const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
-          cb(null, `${Date.now()}-${safeName}`);
-        },
-      }),
-      limits: { fileSize: 8 * 1024 * 1024 },
-      fileFilter: (_req, file, cb) => {
-        const allowed = ['image/png', 'image/jpeg', 'image/webp'];
-        if (!allowed.includes(file.mimetype)) {
-          return cb(new BadRequestException('Format image non autorisé.'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(annonceInterceptor)
   async create(
     @UploadedFiles() files: any[],
     @Body() dto: CreateAnnonceDto,
@@ -82,29 +70,7 @@ export class AnnonceController {
   }
 
   @Post(':id/update')
-  @UseInterceptors(
-    FilesInterceptor('images', 8, {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          const uploadPath = path.resolve(process.cwd(), 'uploads/annonces');
-          fs.mkdirSync(uploadPath, { recursive: true });
-          cb(null, uploadPath);
-        },
-        filename: (_req, file, cb) => {
-          const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
-          cb(null, `${Date.now()}-${safeName}`);
-        },
-      }),
-      limits: { fileSize: 8 * 1024 * 1024 },
-      fileFilter: (_req, file, cb) => {
-        const allowed = ['image/png', 'image/jpeg', 'image/webp'];
-        if (!allowed.includes(file.mimetype)) {
-          return cb(new BadRequestException('Format image non autorisé.'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(annonceInterceptor)
   async updateMine(
     @Param('id') id: string,
     @UploadedFiles() files: any[],

@@ -94,7 +94,7 @@
 
 <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
   {#if loading}
-    <div class="flex items-center justify-center py-24 text-sm text-zinc-400">Chargement de l’annonce...</div>
+    <div class="flex items-center justify-center py-24 text-sm text-zinc-400">Chargement de l'annonce...</div>
   {:else if error}
     <Alert type="error" message={error} />
   {:else if annonce}
@@ -218,7 +218,7 @@
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
             {#if isMine}
-              <a href={`/home/mes-annonces/${annonce.id}/edit`} class="btn-primary">Modifier l’annonce</a>
+              <a href={`/home/mes-annonces/${annonce.id}/edit`} class="btn-primary">Modifier l'annonce</a>
               <a href="/home/mes-annonces" class="btn-secondary">Retour à mes annonces</a>
             {:else}
               <button
@@ -227,7 +227,7 @@
                 disabled={contactLoading}
                 class="btn-primary disabled:opacity-50"
               >
-                {contactLoading ? ‘Connexion...’ : ‘Contacter le producteur’}
+                {contactLoading ? 'Connexion...' : 'Contacter le producteur'}
               </button>
               <a href="/home/marche" class="btn-secondary">Retour aux annonces</a>
             {/if}

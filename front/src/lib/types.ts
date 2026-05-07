@@ -166,12 +166,28 @@ export interface Message {
   createdAt: string;
 }
 
+export interface ConversationParticipant {
+  id: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 export interface Conversation {
   id: string;
   annonceId: string;
   buyerId: string;
   isSAV: boolean;
-  annonce: { id: string; title: string; entrepriseId: string };
+  annonce: {
+    id: string;
+    title: string;
+    entrepriseId: string;
+    creatorUserId?: string;
+    images?: string[];
+    price?: number | null;
+    creator?: ConversationParticipant;
+  };
+  buyer?: ConversationParticipant;
   messages: Message[];
   createdAt: string;
   updatedAt: string;

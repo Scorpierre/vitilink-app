@@ -5,7 +5,7 @@
   const navLinks = [
     { label: 'Tableau de bord', href: '/home' },
     { label: 'Annonces', href: '/home/marche' },
-    { label: 'Messages', href: '/home/messages' },
+    { label: 'Messages', href: '/home/conversations' },
     { label: 'Mes annonces', href: '/home/mes-annonces' },
     { label: 'Mentions légales', href: '/legal' },
     { label: 'CGU', href: '/cgu' }

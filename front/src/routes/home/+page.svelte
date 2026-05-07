@@ -11,7 +11,7 @@
   const shortcuts = [
     { label: 'Déposer une annonce', href: '/home/mes-annonces/new' },
     { label: 'Parcourir les annonces', href: '/home/marche' },
-    { label: 'Ouvrir la messagerie', href: '/home/messages' }
+    { label: 'Ouvrir la messagerie', href: '/home/conversations' }
   ];
 </script>
 

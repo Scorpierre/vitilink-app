@@ -57,8 +57,21 @@ export class ConversationService {
         ],
       },
       include: {
-        annonce: { select: { id: true, title: true, entrepriseId: true } },
-        messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+        annonce: {
+          select: {
+            id: true,
+            title: true,
+            entrepriseId: true,
+            creatorUserId: true,
+            creator: { select: { id: true, username: true, firstName: true, lastName: true } },
+          },
+        },
+        buyer: { select: { id: true, username: true, firstName: true, lastName: true } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { sender: { select: { id: true, username: true } } },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -68,7 +81,18 @@ export class ConversationService {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
-        annonce: { select: { id: true, title: true, creatorUserId: true } },
+        annonce: {
+          select: {
+            id: true,
+            title: true,
+            creatorUserId: true,
+            entrepriseId: true,
+            images: true,
+            price: true,
+            creator: { select: { id: true, username: true, firstName: true, lastName: true } },
+          },
+        },
+        buyer: { select: { id: true, username: true, firstName: true, lastName: true } },
         messages: {
           orderBy: { createdAt: 'asc' },
           include: { sender: { select: { id: true, username: true } } },

@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
 enum UserRole {
   SELLER
   BUYER
@@ -41,9 +39,20 @@ enum AnnonceStatus {
 enum DocumentType {
   USER_DOC
   SALE_DOC
+  KBIS
+  SIRENE_NOTICE
+  VAT_CERTIFICATE
+  RIB
+  CVI_CERTIFICATE
+  IDENTITY_PROOF
+  OTHER
 }
 
-// ─── Models ───────────────────────────────────────────────────────────────────
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
 
 model User {
   id        String   @id @default(uuid())
@@ -74,6 +83,17 @@ model Entreprise {
   type   CompanyType
   status EntrepriseStatus @default(PENDING)
 
+  siren     String? @db.VarChar(9)
+  siret     String? @db.VarChar(14)
+  vatNumber String?
+  cviNumber String?
+
+  addressLine1 String?
+  addressLine2 String?
+  postalCode   String?
+  city         String?
+  country      String? @default("France")
+
   region         String?
   department     String?
   appellations   String[]
@@ -83,26 +103,43 @@ model Entreprise {
   soughtProducts String[]
   soughtVolume   String?
 
-  users    User[]
-  annonces Annonce[]
+  verificationNote String?
+  verifiedAt       DateTime?
+
+  users     User[]
+  annonces  Annonce[]
+  documents Document[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([siren])
+  @@index([siret])
 }
 
 model Annonce {
   id          String        @id @default(uuid())
   title       String
+  productType String?
   description String?
   price       Float?
   volume      Float?
+  volumeUnit  String?       @default("hl")
   vintage     Int?
+  location    String?
+  city        String?
+  region      String?
+  country     String?       @default("France")
+  availabilityTiming String?
+  certifications String[]      @default([])
+  images      String[]         @default([])
   status      AnnonceStatus @default(DRAFT)
 
   restrictToVerified Boolean @default(false)
 
   creatorUserId String
-  creator       User   @relation("AnnonceCreator", fields: [creatorUserId], references: [id])
+  creator       User @relation("AnnonceCreator", fields: [creatorUserId], references: [id])
 
   entrepriseId String
   entreprise   Entreprise @relation(fields: [entrepriseId], references: [id])
@@ -112,17 +149,22 @@ model Annonce {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([creatorUserId])
+  @@index([entrepriseId])
+  @@index([region])
 }
 
 model Conversation {
-  id       String  @id @default(uuid())
-  isSAV   Boolean @default(false)
+  id    String  @id @default(uuid())
+  isSAV Boolean @default(false)
 
   annonceId String
   annonce   Annonce @relation(fields: [annonceId], references: [id])
 
   buyerId String
-  buyer   User   @relation("ConversationBuyer", fields: [buyerId], references: [id])
+  buyer   User @relation("ConversationBuyer", fields: [buyerId], references: [id])
 
   messages Message[]
 
@@ -140,21 +182,39 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id])
 
   senderId String
-  sender   User   @relation(fields: [senderId], references: [id])
+  sender   User @relation(fields: [senderId], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model Document {
-  id   String       @id @default(uuid())
-  url  String
-  type DocumentType
+  id     String         @id @default(uuid())
+  url    String
+  type   DocumentType
+  status DocumentStatus @default(PENDING)
+
+  originalName String?
+  mimeType     String?
+  sizeBytes    Int?
+  label        String?
+  comment      String?
 
   annonceId String?
   annonce   Annonce? @relation(fields: [annonceId], references: [id])
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User? @relation(fields: [userId], references: [id])
+
+  entrepriseId String?
+  entreprise   Entreprise? @relation(fields: [entrepriseId], references: [id])
+
+  reviewedAt DateTime?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([entrepriseId])
+  @@index([userId])
 }

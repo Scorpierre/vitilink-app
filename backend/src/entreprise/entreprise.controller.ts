@@ -1,26 +1,34 @@
-import { Controller, Post, Get, Patch, Body, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { EntrepriseService } from './entreprise.service';
-import { CreateEntrepriseDto } from './dto/create-entreprise.dto';
 import { UpdateEntrepriseDto } from './dto/update-entreprise.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)
 @Controller('entreprise')
+@UseGuards(JwtAuthGuard)
 export class EntrepriseController {
   constructor(private readonly entrepriseService: EntrepriseService) {}
 
-  @Post()
-  create(@Request() req, @Body() dto: CreateEntrepriseDto) {
-    return this.entrepriseService.create(req.user.userId, dto);
-  }
-
   @Get('me')
-  findMine(@Request() req) {
-    return this.entrepriseService.findByUser(req.user.userId);
+  async getMine(@Request() req) {
+    const userId = req.user.userId;
+    const entreprise = await this.entrepriseService.getMine(userId);
+
+    return {
+      status: HttpStatus.OK,
+      message: '',
+      result: entreprise,
+    };
   }
 
-  @Patch()
-  update(@Request() req, @Body() dto: UpdateEntrepriseDto) {
-    return this.entrepriseService.update(req.user.userId, dto);
+  @Post('update')
+  async updateMine(@Body() dto: UpdateEntrepriseDto, @Request() req) {
+    const userId = req.user.userId;
+    const result = await this.entrepriseService.updateMine(userId, dto);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'Entreprise mise à jour.',
+      result,
+    };
   }
 }

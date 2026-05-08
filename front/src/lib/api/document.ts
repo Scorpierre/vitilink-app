@@ -1,9 +1,10 @@
 import { http } from './http';
+import type { ApiResponse, DocumentItem } from '$lib/types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export const DocumentAPI = {
-  listEntrepriseDocuments: () =>
+  listEntrepriseDocuments: (): Promise<ApiResponse<DocumentItem[]>> =>
     http('/document/entreprise'),
 
   deleteDocument: (id: string) =>

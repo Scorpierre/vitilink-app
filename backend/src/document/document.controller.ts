@@ -15,9 +15,19 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { DocumentService } from './document.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import * as fs from 'fs';
-import * as path from 'path';
-import { Express } from 'express';
+import {
+  entrepriseDestination,
+  entrepriseFilename,
+  entrepriseFileFilter,
+} from 'src/common/multer.helpers';
+
+const entrepriseStorage = diskStorage({ destination: entrepriseDestination, filename: entrepriseFilename });
+
+const entrepriseInterceptor = FileInterceptor('file', {
+  storage: entrepriseStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: entrepriseFileFilter,
+});
 
 @Controller('document')
 @UseGuards(JwtAuthGuard)
@@ -37,38 +47,7 @@ export class DocumentController {
   }
 
   @Post('entreprise/upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          const uploadPath = path.resolve(process.cwd(), 'uploads/entreprise');
-          fs.mkdirSync(uploadPath, { recursive: true });
-          cb(null, uploadPath);
-        },
-        filename: (_req, file, cb) => {
-          const safeName = file.originalname.replace(/\s+/g, '-');
-          cb(null, `${Date.now()}-${safeName}`);
-        },
-      }),
-      limits: {
-        fileSize: 10 * 1024 * 1024,
-      },
-      fileFilter: (_req, file, cb) => {
-        const allowed = [
-          'application/pdf',
-          'image/png',
-          'image/jpeg',
-          'image/webp',
-        ];
-
-        if (!allowed.includes(file.mimetype)) {
-          return cb(new BadRequestException('Format non autorisé.'), false);
-        }
-
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(entrepriseInterceptor)
   async uploadEntrepriseDocument(
     @UploadedFile() file: any,
     @Body('type') type: string,

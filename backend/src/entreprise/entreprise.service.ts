@@ -1,43 +1,102 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateEntrepriseDto } from './dto/create-entreprise.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateEntrepriseDto } from './dto/update-entreprise.dto';
 
 @Injectable()
 export class EntrepriseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, dto: CreateEntrepriseDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-    if (user.entrepriseId) throw new BadRequestException('User already has an entreprise');
-
-    const entreprise = await this.prisma.entreprise.create({
-      data: {
-        ...dto,
-        users: { connect: { id: userId } },
+  async getMine(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        entreprise: {
+          include: {
+            documents: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
       },
     });
 
-    return entreprise;
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable.');
+    }
+
+    return user.entreprise;
   }
 
-  async findByUser(userId: string) {
+  async updateMine(userId: string, dto: UpdateEntrepriseDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { entreprise: true },
     });
-    if (!user?.entreprise) throw new NotFoundException('No entreprise found for this user');
-    return user.entreprise;
-  }
 
-  async update(userId: string, dto: UpdateEntrepriseDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user?.entrepriseId) throw new NotFoundException('No entreprise found for this user');
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable.');
+    }
+
+    if (!user.entrepriseId) {
+      const entreprise = await this.prisma.entreprise.create({
+        data: {
+          name: dto.name || 'Mon entreprise',
+          type: dto.type || 'OTHER',
+          siren: dto.siren,
+          siret: dto.siret,
+          vatNumber: dto.vatNumber,
+          cviNumber: dto.cviNumber,
+          addressLine1: dto.addressLine1,
+          addressLine2: dto.addressLine2,
+          postalCode: dto.postalCode,
+          city: dto.city,
+          country: dto.country || 'France',
+          region: dto.region,
+          department: dto.department,
+          appellations: dto.appellations || [],
+          grapeVarieties: dto.grapeVarieties || [],
+          surfaceHa: dto.surfaceHa,
+          annualVolume: dto.annualVolume,
+          soughtProducts: dto.soughtProducts || [],
+          soughtVolume: dto.soughtVolume,
+          status: 'PENDING',
+        },
+      });
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { entrepriseId: entreprise.id },
+      });
+
+      return entreprise;
+    }
 
     return this.prisma.entreprise.update({
       where: { id: user.entrepriseId },
-      data: dto,
+      data: {
+        name: dto.name,
+        type: dto.type,
+        siren: dto.siren,
+        siret: dto.siret,
+        vatNumber: dto.vatNumber,
+        cviNumber: dto.cviNumber,
+        addressLine1: dto.addressLine1,
+        addressLine2: dto.addressLine2,
+        postalCode: dto.postalCode,
+        city: dto.city,
+        country: dto.country,
+        region: dto.region,
+        department: dto.department,
+        appellations: dto.appellations,
+        grapeVarieties: dto.grapeVarieties,
+        surfaceHa: dto.surfaceHa,
+        annualVolume: dto.annualVolume,
+        soughtProducts: dto.soughtProducts,
+        soughtVolume: dto.soughtVolume,
+        status: 'PENDING',
+        verificationNote: null,
+        verifiedAt: null,
+      },
     });
   }
 }

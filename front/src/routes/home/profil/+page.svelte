@@ -64,6 +64,12 @@
 
   let selectedFile: File | null = null;
   let selectedDocumentType: DocumentType = 'KBIS';
+  let activeDocumentType: DocumentType = 'KBIS';
+
+  $: selectedDocumentType = activeDocumentType;
+  $: filteredDocuments = documents.filter((doc) => doc.type === activeDocumentType);
+  $: activeDocumentLabel =
+    DOCUMENT_TYPES.find((d) => d.value === activeDocumentType)?.label ?? 'Document';
   let documentLabel = '';
 
   const REGIONS = [
@@ -851,29 +857,54 @@
         <div class="mb-5">
           <h2 class="text-base font-semibold text-zinc-950">Documents de vérification</h2>
           <p class="text-sm text-zinc-500 mt-1">
-            Ajoutez vos justificatifs pour renforcer la confiance sur la plateforme.
+            Sélectionnez une catégorie pour consulter ou ajouter vos justificatifs.
           </p>
         </div>
 
+        <div class="mb-6 flex flex-wrap gap-2">
+          {#each DOCUMENT_TYPES as dt}
+            <button
+              type="button"
+              on:click={() => (activeDocumentType = dt.value)}
+              class="rounded-2xl px-4 py-2 text-sm font-medium ring-1 transition
+                {activeDocumentType === dt.value
+                  ? 'bg-violet-600 text-white ring-violet-600 shadow-sm'
+                  : 'bg-white text-zinc-600 ring-zinc-200 hover:bg-violet-50 hover:text-violet-700 hover:ring-violet-200'}"
+            >
+              {dt.label}
+            </button>
+          {/each}
+        </div>
+
         <div class="grid xl:grid-cols-[380px_1fr] gap-6">
-          <div class="rounded-3xl border border-dashed border-zinc-200 p-5 bg-zinc-50/60">
+          <div class="rounded-3xl border border-dashed border-violet-200 bg-violet-50/40 p-5">
             <div class="space-y-4">
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-zinc-800">Type de document</label>
-                <select bind:value={selectedDocumentType} class="input-soft">
-                  {#each DOCUMENT_TYPES as dt}
-                    <option value={dt.value}>{dt.label}</option>
-                  {/each}
-                </select>
+              <div>
+                <div class="text-sm font-semibold text-zinc-950">
+                  Ajouter un document : {activeDocumentLabel}
+                </div>
+                <p class="mt-1 text-xs leading-5 text-zinc-500">
+                  Formats acceptés : PDF, PNG, JPG, JPEG ou WEBP — 10 Mo max.
+                </p>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-sm font-medium text-zinc-800">Libellé</label>
-                <input bind:value={documentLabel} type="text" class="input-soft" placeholder="Optionnel" />
+                <label class="block text-sm font-medium text-zinc-800" for="documentLabel">
+                  Libellé
+                </label>
+                <input
+                  id="documentLabel"
+                  bind:value={documentLabel}
+                  type="text"
+                  class="input-soft"
+                  placeholder="Optionnel"
+                />
               </div>
 
               <div class="space-y-2">
-                <label class="block text-sm font-medium text-zinc-800">Fichier</label>
+                <label class="block text-sm font-medium text-zinc-800" for="document-upload">
+                  Fichier
+                </label>
                 <input
                   id="document-upload"
                   type="file"
@@ -884,40 +915,46 @@
                     selectedFile = target.files?.[0] ?? null;
                   }}
                 />
-                <p class="text-xs text-zinc-400">PDF, PNG, JPG ou WEBP — 10 Mo max.</p>
+                <p class="text-xs text-zinc-400">
+                  Vous pouvez envoyer un PDF ou une photo nette du document.
+                </p>
               </div>
 
               <button on:click={uploadDocument} disabled={uploadLoading} class="btn-primary w-full">
-                {uploadLoading ? 'Envoi...' : 'Envoyer le document'}
+                {uploadLoading ? 'Envoi...' : `Envoyer ${activeDocumentLabel}`}
               </button>
             </div>
           </div>
 
           <div class="space-y-3">
-            {#if documents.length}
-              {#each documents as doc}
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-semibold text-zinc-950">{activeDocumentLabel}</h3>
+                <p class="text-xs text-zinc-500">
+                  {filteredDocuments.length} document{filteredDocuments.length > 1 ? 's' : ''} dans cette catégorie
+                </p>
+              </div>
+            </div>
+
+            {#if filteredDocuments.length}
+              {#each filteredDocuments as doc}
                 <div class="rounded-3xl border border-zinc-200 bg-white p-4">
                   <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div class="min-w-0">
                       <div class="flex flex-wrap items-center gap-2">
                         <h3 class="text-sm font-semibold text-zinc-950 truncate">
-                          {doc.label || doc.originalName || 'Document'}
+                          {doc.label || doc.originalName || activeDocumentLabel}
                         </h3>
                         <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 {docStatusClass(doc.status)}">
                           {docStatusLabel(doc.status)}
                         </span>
                       </div>
 
-                      <div class="mt-2 flex flex-wrap gap-2">
-                        <span class="inline-flex rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700">
-                          {docTypeLabel(doc.type)}
-                        </span>
-                        {#if doc.originalName}
-                          <span class="inline-flex rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] text-zinc-600">
-                            {doc.originalName}
-                          </span>
-                        {/if}
-                      </div>
+                      {#if doc.originalName}
+                        <div class="mt-2 text-xs text-zinc-500 truncate">
+                          {doc.originalName}
+                        </div>
+                      {/if}
 
                       {#if doc.comment}
                         <p class="mt-2 text-sm text-zinc-500">{doc.comment}</p>
@@ -929,10 +966,19 @@
                     </div>
 
                     <div class="flex gap-2">
-                      <a href={`http://localhost:3000${doc.url}`} target="_blank" rel="noopener noreferrer" class="btn-secondary">
+                      <a
+                        href={`http://localhost:3000${doc.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-secondary"
+                      >
                         Voir
                       </a>
-                      <button on:click={() => deleteDocument(doc.id)} class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50">
+
+                      <button
+                        on:click={() => deleteDocument(doc.id)}
+                        class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                      >
                         Supprimer
                       </button>
                     </div>
@@ -941,9 +987,11 @@
               {/each}
             {:else}
               <div class="rounded-3xl border border-zinc-200 bg-zinc-50/60 px-6 py-10 text-center">
-                <div class="text-sm font-medium text-zinc-700">Aucun document pour le moment</div>
+                <div class="text-sm font-medium text-zinc-700">
+                  Aucun document {activeDocumentLabel}
+                </div>
                 <div class="mt-1 text-sm text-zinc-500">
-                  Ajoutez un Kbis, un avis Sirene, un justificatif CVI ou tout autre document utile.
+                  Ajoutez un document ou une photo claire dans cette catégorie.
                 </div>
               </div>
             {/if}

@@ -1,10 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Entreprise, Document } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateEntrepriseDto } from './dto/update-entreprise.dto';
+
+type EntrepriseWithDocuments = Entreprise & {
+  documents: Document[];
+};
 
 @Injectable()
 export class EntrepriseService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private canBeVerified(entreprise: EntrepriseWithDocuments) {
+    const hasLegalDocument = entreprise.documents.some(
+      (doc) =>
+        ['KBIS', 'SIRENE_NOTICE'].includes(doc.type) &&
+        doc.status === 'APPROVED',
+    );
+
+    const hasCvi = entreprise.documents.some(
+      (doc) => doc.type === 'CVI_CERTIFICATE' && doc.status === 'APPROVED',
+    );
+
+    return Boolean(
+      (entreprise.siren || entreprise.siret) &&
+        hasLegalDocument &&
+        hasCvi,
+    );
+  }
+
+  private async refreshVerificationStatus(entrepriseId: string) {
+    const entreprise = await this.prisma.entreprise.findUnique({
+      where: { id: entrepriseId },
+      include: { documents: true },
+    });
+
+    if (!entreprise) {
+      throw new NotFoundException('Entreprise introuvable.');
+    }
+
+    const shouldBeVerified = this.canBeVerified(entreprise);
+
+    return this.prisma.entreprise.update({
+      where: { id: entrepriseId },
+      data: {
+        status: shouldBeVerified ? 'VERIFIED' : 'PENDING',
+        verifiedAt: shouldBeVerified ? new Date() : null,
+        verificationNote: shouldBeVerified ? null : entreprise.verificationNote,
+      },
+      include: {
+        documents: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+  }
 
   async getMine(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -68,10 +118,10 @@ export class EntrepriseService {
         data: { entrepriseId: entreprise.id },
       });
 
-      return entreprise;
+      return this.refreshVerificationStatus(entreprise.id);
     }
 
-    return this.prisma.entreprise.update({
+    const entreprise = await this.prisma.entreprise.update({
       where: { id: user.entrepriseId },
       data: {
         name: dto.name,
@@ -98,5 +148,7 @@ export class EntrepriseService {
         verifiedAt: null,
       },
     });
+
+    return this.refreshVerificationStatus(entreprise.id);
   }
 }

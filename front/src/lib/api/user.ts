@@ -7,16 +7,6 @@ export interface UpdateProfileBody {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  companyName?: string;
-  companyType?: string;
-  region?: string;
-  department?: string;
-  appellations?: string[];
-  grapeVarieties?: string[];
-  surfaceHa?: number;
-  annualVolume?: number;
-  soughtProducts?: string[];
-  soughtVolume?: string;
 }
 
 export const UserAPI = {

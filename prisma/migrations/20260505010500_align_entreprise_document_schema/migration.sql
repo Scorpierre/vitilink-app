@@ -1,0 +1,4 @@
+-- no-op: all changes in this migration are already applied by 20260504115655_auto
+-- (siren/siret/vatNumber/cviNumber/address fields on Entreprise,
+--  status/entrepriseId/document fields on Document,
+--  DocumentStatus enum, DocumentType values, indexes, FK)

@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-vitilink}
+    ports:
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    working_dir: /app/backend
     ports:
       - "3000:3000"
     environment:
@@ -26,8 +29,9 @@ services:
       PORT: ${PORT:-3000}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
     volumes:
-      - ./backend/src:/app/backend/src
+      - ./backend:/app/backend
       - ./prisma:/app/prisma
+      - /app/backend/node_modules
     depends_on:
       db:
         condition: service_healthy

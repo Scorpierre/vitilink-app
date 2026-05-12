@@ -1,0 +1,1 @@
+export { UpdateEntrepriseDto as CreateEntrepriseDto } from './update-entreprise.dto';

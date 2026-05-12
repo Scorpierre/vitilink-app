@@ -7,8 +7,62 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: vitilink_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install root deps (prisma)
+        run: npm ci
+
+      - name: Install backend deps
+        run: cd backend && npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Run backend tests
+        run: cd backend && npm test -- --passWithNoTests
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/vitilink_test?schema=public
+          JWT_SECRET: test_secret
+
+      - name: Install frontend deps
+        run: cd front && npm ci
+
+      - name: Type-check frontend
+        run: cd front && npm run check || true
+
+      - name: Run frontend tests
+        run: cd front && npm test -- --run --passWithNoTests
+
   deploy:
     name: Deploy
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -34,3 +88,7 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker image prune -f
 
+      - name: Health check
+        run: |
+          sleep 15
+          curl -f --retry 5 --retry-delay 5 ${{ secrets.CORS_ORIGIN }}/api/health

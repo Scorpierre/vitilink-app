@@ -10,7 +10,11 @@ describe('EntrepriseService', () => {
   beforeEach(async () => {
     prisma = {
       user: { findUnique: jest.fn(), update: jest.fn() },
-      entreprise: { create: jest.fn(), update: jest.fn() },
+      entreprise: {
+        findUnique: jest.fn().mockResolvedValue({ documents: [], siren: null, siret: null, verificationNote: null }),
+        create: jest.fn(),
+        update: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -56,6 +60,7 @@ describe('EntrepriseService', () => {
     it('should create new entreprise and link it to user if user has none', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: null, entreprise: null });
       prisma.entreprise.create.mockResolvedValue({ id: 'new-ent', name: 'New Co' });
+      prisma.entreprise.update.mockResolvedValue({ id: 'new-ent', name: 'New Co' });
       prisma.user.update.mockResolvedValue({});
 
       const result = await service.updateMine('user-1', { name: 'New Co' });
@@ -71,6 +76,7 @@ describe('EntrepriseService', () => {
     it('should use defaults when creating entreprise with missing fields', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: null, entreprise: null });
       prisma.entreprise.create.mockResolvedValue({ id: 'new-ent', name: 'Mon entreprise' });
+      prisma.entreprise.update.mockResolvedValue({ id: 'new-ent', name: 'Mon entreprise' });
       prisma.user.update.mockResolvedValue({});
 
       await service.updateMine('user-1', {});

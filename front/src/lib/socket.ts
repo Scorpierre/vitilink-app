@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import type { Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 let socket: Socket | null = null;
 
@@ -10,7 +10,10 @@ export async function getSocket(): Promise<Socket> {
 
   if (!socket) {
     const { io } = await import('socket.io-client');
-    socket = io(SOCKET_URL, {
+    const url = new URL(API_BASE);
+    const path = url.pathname === '/' ? '/socket.io' : `${url.pathname}/socket.io`;
+    socket = io(url.origin, {
+      path,
       withCredentials: true,
     });
   }

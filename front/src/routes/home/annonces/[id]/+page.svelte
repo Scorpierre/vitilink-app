@@ -5,6 +5,7 @@
   import { AnnonceAPI } from '$lib/api/annonce';
   import { AuthAPI } from '$lib/api/auth';
   import { ConversationAPI } from '$lib/api/conversation';
+  import { PaymentAPI } from '$lib/api/payment';
   import type { Annonce, User } from '$lib/types';
   import Alert from '$lib/components/utils/Alert.svelte';
   import AnnonceMeta from '$lib/components/annonces/AnnonceMeta.svelte';
@@ -15,6 +16,23 @@
     statusClass,
     statusLabel
   } from '$lib/utils/annonce';
+  import type { AnnonceOrder, OrderStatus } from '$lib/types';
+
+  function orderStatusLabel(status: OrderStatus) {
+    const map: Record<OrderStatus, string> = {
+      PENDING: 'En attente de paiement', PAID: 'Payée',
+      SHIPPED: 'Expédiée', DELIVERED: 'Livrée',
+      CANCELED: 'Annulée', FAILED: 'Échouée',
+    };
+    return map[status];
+  }
+
+  function orderStatusClass(status: OrderStatus) {
+    if (status === 'PAID' || status === 'DELIVERED') return 'bg-emerald-50 text-emerald-700 ring-emerald-200/60';
+    if (status === 'SHIPPED') return 'bg-blue-50 text-blue-700 ring-blue-200/60';
+    if (status === 'FAILED' || status === 'CANCELED') return 'bg-red-50 text-red-700 ring-red-200/60';
+    return 'bg-amber-50 text-amber-700 ring-amber-200/60';
+  }
 
   let annonce: Annonce | null = null;
   let currentUser: User | null = null;
@@ -26,10 +44,22 @@
   let fullscreenOpen = false;
 
   $: isMine = !!annonce && !!currentUser && annonce.creatorUserId === currentUser.id;
+  $: myActiveOrder = annonce?.orders?.find(
+    (o) => o.buyerUserId === currentUser?.id && (o.status === 'PAID' || o.status === 'PENDING')
+  ) ?? null;
+  $: sellerOrders = isMine ? (annonce?.orders ?? []) : [];
+  $: isSold = !!annonce && (annonce.soldOut === true || annonce.status === 'SOLD');
+  $: canBuy = !isMine && !isSold && annonce?.status === 'PUBLISHED' && !!annonce?.price && !myActiveOrder;
   $: location = annonce?.location || [annonce?.city, annonce?.region].filter(Boolean).join(', ');
   $: selectedIndex = annonce?.images?.findIndex((path) => path === selectedImage) ?? -1;
 
-  onMount(loadDetail);
+  onMount(() => {
+    loadDetail();
+    // Rafraîchir quand l'utilisateur revient sur l'onglet (ex: après paiement dans un autre onglet)
+    const onVisibility = () => { if (document.visibilityState === 'visible') loadDetail(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  });
 
   async function loadDetail() {
     loading = true;
@@ -86,6 +116,21 @@
       contactError = e instanceof Error ? e.message : 'Impossible de contacter le vendeur.';
     } finally {
       contactLoading = false;
+    }
+  }
+
+  let cancelLoading = false;
+  async function cancelMyOrder() {
+    if (!myActiveOrder || myActiveOrder.status !== 'PENDING') return;
+    if (!confirm('Annuler cette commande en attente de paiement ?')) return;
+    cancelLoading = true;
+    try {
+      await PaymentAPI.cancelOrder(myActiveOrder.id);
+      await loadDetail();
+    } catch (e) {
+      contactError = e instanceof Error ? e.message : "Impossible d'annuler la commande.";
+    } finally {
+      cancelLoading = false;
     }
   }
 </script>
@@ -229,6 +274,27 @@
               >
                 {contactLoading ? 'Connexion...' : 'Contacter le producteur'}
               </button>
+              {#if canBuy}
+                <a href={`/home/checkout/${annonce.id}`} class="btn-primary">Acheter</a>
+              {:else if myActiveOrder?.status === 'PENDING' && !isSold}
+                <a href={`/home/checkout/${annonce.id}`} class="btn-primary">Reprendre le paiement</a>
+                <button
+                  type="button"
+                  on:click={cancelMyOrder}
+                  disabled={cancelLoading}
+                  class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-red-600 ring-1 ring-red-200 transition hover:bg-red-50 disabled:opacity-50"
+                >
+                  {cancelLoading ? 'Annulation...' : 'Annuler la commande'}
+                </button>
+              {:else if myActiveOrder?.status === 'PAID'}
+                <a href="/home/commandes" class={`inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold ring-1 ${orderStatusClass(myActiveOrder.status)}`}>
+                  Ma commande — {orderStatusLabel(myActiveOrder.status)}
+                </a>
+              {:else if isSold}
+                <span class="inline-flex items-center gap-2 rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-500 ring-1 ring-zinc-200">
+                  Annonce vendue
+                </span>
+              {/if}
               <a href="/home/marche" class="btn-secondary">Retour aux annonces</a>
             {/if}
           </div>
@@ -238,6 +304,30 @@
           </div>
         </div>
       </section>
+
+      {#if isMine && sellerOrders.length > 0}
+        <section class="card p-6">
+          <h2 class="text-base font-semibold text-zinc-950">Commandes reçues ({sellerOrders.length})</h2>
+          <div class="mt-4 space-y-3">
+            {#each sellerOrders as order}
+              <div class="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3">
+                <div>
+                  <div class="text-sm font-medium text-zinc-900">{order.buyer?.username ?? 'Acheteur'}</div>
+                  <div class="mt-0.5 text-xs text-zinc-500">
+                    {order.quantity} unité(s) · {new Date(order.createdAt).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ${orderStatusClass(order.status)}`}>
+                    {orderStatusLabel(order.status)}
+                  </span>
+                  <span class="text-sm font-semibold text-zinc-950">{formatPrice(order.totalAmount / 100)}</span>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
 
       <section class="card p-6">
         <h2 class="text-base font-semibold text-zinc-950">Entreprise</h2>

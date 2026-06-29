@@ -53,8 +53,8 @@ export class AnnonceController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const result = await this.annonceService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req) {
+    const result = await this.annonceService.findOne(id, req.user?.userId);
     return { status: HttpStatus.OK, message: '', result };
   }
 

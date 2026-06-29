@@ -6,7 +6,7 @@ import * as express from 'express';
 import * as path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(cookieParser());
   app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));

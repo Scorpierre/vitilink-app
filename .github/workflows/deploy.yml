@@ -84,6 +84,9 @@ jobs:
             PORT=3000
             CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
             VITE_API_URL=${{ secrets.VITE_API_URL }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
             EOF
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker image prune -f

@@ -29,6 +29,9 @@ describe('AnnonceService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      order: {
+        count: jest.fn().mockResolvedValue(0),
+      },
       user: { findUnique: jest.fn() },
     };
 

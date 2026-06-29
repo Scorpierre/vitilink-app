@@ -66,9 +66,10 @@ describe('AnnonceController', () => {
     it('should return a single annonce', async () => {
       annonceService.findOne.mockResolvedValue({ id: 'annonce-1' } as any);
 
-      const result = await controller.findOne('annonce-1');
+      const result = await controller.findOne('annonce-1', req);
       expect(result.status).toBe(HttpStatus.OK);
       expect(result.result).toMatchObject({ id: 'annonce-1' });
+      expect(annonceService.findOne).toHaveBeenCalledWith('annonce-1', 'user-1');
     });
   });
 

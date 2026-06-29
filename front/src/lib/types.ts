@@ -111,8 +111,21 @@ export interface Annonce {
   entrepriseId: string;
   entreprise?: Pick<Entreprise, 'id' | 'name' | 'type' | 'status' | 'city' | 'region' | 'country'>;
   creator?: Pick<User, 'id' | 'username' | 'firstName' | 'lastName'>;
+  orders?: AnnonceOrder[];
+  _count?: { orders: number };
+  soldOut?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AnnonceOrder {
+  id: string;
+  status: OrderStatus;
+  quantity: number;
+  totalAmount: number;
+  createdAt: string;
+  buyerUserId: string;
+  buyer?: { id: string; username: string };
 }
 
 export interface CreateAnnonceBody {
@@ -171,6 +184,48 @@ export interface ConversationParticipant {
   username: string;
   firstName?: string;
   lastName?: string;
+}
+
+export type OrderStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELED'
+  | 'FAILED';
+
+export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
+
+export interface Payment {
+  id: string;
+  stripePaymentId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  createdAt: string;
+}
+
+export interface Order {
+  id: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  currency: string;
+  status: OrderStatus;
+  annonceId: string;
+  buyerUserId: string;
+  annonce?: { id: string; title: string; images?: string[]; creatorUserId?: string };
+  buyer?: { id: string; username: string };
+  payment?: Payment | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrderResponse {
+  orderId: string;
+  clientSecret: string;
+  amount: number;
+  currency: string;
 }
 
 export interface Conversation {

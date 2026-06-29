@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AnnonceStatus } from '@prisma/client';
+import { AnnonceStatus, OrderStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAnnonceDto } from './dto/create-annonce.dto';
 import { UpdateAnnonceDto } from './dto/update-annonce.dto';
@@ -73,12 +73,13 @@ export class AnnonceService {
             country: true,
           },
         },
+        _count: { select: { orders: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const annonce = await this.prisma.annonce.findUnique({
       where: { id },
       include: {
@@ -101,6 +102,22 @@ export class AnnonceService {
             lastName: true,
           },
         },
+        orders: userId
+          ? {
+              // Le vendeur voit toutes les commandes ; un acheteur ne voit que les siennes.
+              where: { OR: [{ buyerUserId: userId }, { annonce: { creatorUserId: userId } }] },
+              select: {
+                id: true,
+                status: true,
+                quantity: true,
+                totalAmount: true,
+                createdAt: true,
+                buyerUserId: true,
+                buyer: { select: { id: true, username: true } },
+              },
+              orderBy: { createdAt: 'desc' as const },
+            }
+          : false,
       },
     });
 
@@ -108,7 +125,13 @@ export class AnnonceService {
       throw new NotFoundException('Annonce introuvable.');
     }
 
-    return annonce;
+    // Flag fiable : l'annonce est vendue si elle a une commande payée
+    // (un acheteur ne voit pas les commandes des autres, donc on l'expose côté serveur).
+    const paidCount = await this.prisma.order.count({
+      where: { annonceId: id, status: OrderStatus.PAID },
+    });
+
+    return { ...annonce, soldOut: paidCount > 0 || annonce.status === AnnonceStatus.SOLD };
   }
 
   async create(userId: string, dto: CreateAnnonceDto, files: any[] = []) {

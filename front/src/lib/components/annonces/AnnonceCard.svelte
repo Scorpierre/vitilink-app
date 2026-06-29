@@ -34,6 +34,11 @@
               <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ${statusClass(annonce.status)}`}>
                 {statusLabel(annonce.status)}
               </span>
+              {#if annonce._count?.orders}
+                <span class="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-200/60">
+                  {annonce._count.orders} commande{annonce._count.orders > 1 ? 's' : ''}
+                </span>
+              {/if}
             {/if}
           </div>
           <h2 class="mt-3 line-clamp-2 text-lg font-semibold text-zinc-950">{annonce.title}</h2>

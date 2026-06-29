@@ -12,6 +12,7 @@
     { label: 'Annonces', href: '/home/marche' },
     { label: 'Messages', href: '/home/conversations' },
     { label: 'Mes annonces', href: '/home/mes-annonces' },
+    { label: 'Commandes', href: '/home/commandes' },
     { label: 'Profil', href: '/home/profil' }
   ];
 
@@ -117,6 +118,11 @@
                 <a href="/home/profil" on:click={closeAll}
                   class="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-zinc-700 hover:bg-[rgb(var(--primary-50))] hover:text-[rgb(var(--primary-800))] transition">
                   Mon profil
+                </a>
+
+                <a href="/home/commandes" on:click={closeAll}
+                  class="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm text-zinc-700 hover:bg-[rgb(var(--primary-50))] hover:text-[rgb(var(--primary-800))] transition">
+                  Mes commandes
                 </a>
 
                 <a href="/home/parametres" on:click={closeAll}

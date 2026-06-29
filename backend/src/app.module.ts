@@ -9,6 +9,7 @@ import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
 import { DocumentModule } from './document/document.module';
 import { AnnonceModule } from './annonce/annonce.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AnnonceModule } from './annonce/annonce.module';
     MessageModule,
     DocumentModule,
     AnnonceModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

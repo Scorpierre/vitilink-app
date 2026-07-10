@@ -53,7 +53,7 @@ export class MailService {
             <div style="background:#f8f4ff;border-radius:12px;padding:20px;margin:24px 0">
               <div style="font-weight:600;color:#3f1d6e;font-size:16px;margin-bottom:12px">${data.annonceTitle}</div>
               <table style="width:100%;color:#555;font-size:14px">
-                <tr><td style="padding:4px 0">Quantité</td><td style="text-align:right">${data.quantity}</td></tr>
+                <tr><td style="padding:4px 0">Lot</td><td style="text-align:right">Complet</td></tr>
                 <tr><td style="padding:4px 0">Montant total</td><td style="text-align:right;font-weight:700;color:#3f1d6e">${amount}</td></tr>
                 <tr><td style="padding:4px 0;color:#888">Référence</td><td style="text-align:right;color:#888;font-size:12px">${data.orderId}</td></tr>
               </table>
@@ -91,7 +91,7 @@ export class MailService {
               <div style="font-weight:600;color:#3f1d6e;font-size:16px;margin-bottom:12px">${data.annonceTitle}</div>
               <table style="width:100%;color:#555;font-size:14px">
                 <tr><td style="padding:4px 0">Acheteur</td><td style="text-align:right"><strong>${data.buyerUsername}</strong></td></tr>
-                <tr><td style="padding:4px 0">Quantité</td><td style="text-align:right">${data.quantity}</td></tr>
+                <tr><td style="padding:4px 0">Lot</td><td style="text-align:right">Complet</td></tr>
                 <tr><td style="padding:4px 0">Montant reçu</td><td style="text-align:right;font-weight:700;color:#3f1d6e">${amount}</td></tr>
                 <tr><td style="padding:4px 0;color:#888">Référence</td><td style="text-align:right;color:#888;font-size:12px">${data.orderId}</td></tr>
               </table>

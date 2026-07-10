@@ -12,6 +12,12 @@ export const PaymentAPI = {
 
   findOrder: (id: string) => http<Order>(`/payment/orders/${id}`),
 
+  syncOrder: (id: string) =>
+    http<Order>(`/payment/orders/${id}/sync`, { method: 'POST' }),
+
   cancelOrder: (id: string) =>
     http<Order>(`/payment/orders/${id}/cancel`, { method: 'POST' }),
+
+  confirmDelivery: (id: string) =>
+    http<Order>(`/payment/orders/${id}/confirm-delivery`, { method: 'POST' }),
 };

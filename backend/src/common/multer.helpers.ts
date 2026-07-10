@@ -21,6 +21,27 @@ export const annonceFileFilter = (_req: any, file: any, cb: (err: any, accept: b
   cb(null, true);
 };
 
+export const annonceMixedFileFilter = (_req: any, file: any, cb: (err: any, accept: boolean) => void) => {
+  const imageAllowed = ['image/png', 'image/jpeg', 'image/webp'];
+  const documentAllowed = ['application/pdf', ...imageAllowed];
+
+  if (file.fieldname === 'images') {
+    if (!imageAllowed.includes(file.mimetype)) {
+      return cb(new BadRequestException('Format image non autorisé.'), false);
+    }
+    return cb(null, true);
+  }
+
+  if (file.fieldname === 'documents') {
+    if (!documentAllowed.includes(file.mimetype)) {
+      return cb(new BadRequestException('Format document non autorisé.'), false);
+    }
+    return cb(null, true);
+  }
+
+  return cb(new BadRequestException('Champ fichier non autorisé.'), false);
+};
+
 export const entrepriseDestination = (_req: any, _file: any, cb: (err: any, dest: string) => void) => {
   const uploadPath = path.resolve(process.cwd(), 'uploads/entreprise');
   fs.mkdirSync(uploadPath, { recursive: true });

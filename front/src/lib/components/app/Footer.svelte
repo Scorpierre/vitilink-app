@@ -3,67 +3,76 @@
   const year = new Date().getFullYear();
 
   const navLinks = [
-    { label: 'Tableau de bord', href: '/home' },
-    { label: 'Annonces', href: '/home/marche' },
-    { label: 'Messages', href: '/home/conversations' },
-    { label: 'Mes annonces', href: '/home/mes-annonces' },
+    { label: 'Tableau de bord', href: '/dashboard' },
+    { label: 'Annonces', href: '/dashboard/marche' },
+    { label: 'Messages', href: '/dashboard/conversations' },
+    { label: 'Mes annonces', href: '/dashboard/mes-annonces' },
     { label: 'Mentions légales', href: '/legal' },
-    { label: 'CGU', href: '/cgu' }
+    { label: 'CGU', href: '/cgu' },
+    { label: 'CGV', href: '/cgv' },
   ];
 </script>
 
-<footer class="relative overflow-hidden border-t border-[rgb(var(--border))] bg-[linear-gradient(180deg,#ffffff_0%,#faf5ff_100%)]">
-  <div class="pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-[rgba(139,92,246,0.08)] blur-3xl"></div>
-  <div class="pointer-events-none absolute -bottom-20 left-0 h-72 w-72 rounded-full bg-[rgba(167,139,250,0.12)] blur-3xl"></div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-    <div class="grid md:grid-cols-3 gap-10">
-      <div>
+<footer class="border-t border-violet-200/10 bg-[#181121] text-white">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="grid gap-10 md:grid-cols-12">
+      <div class="md:col-span-5">
         <div class="flex items-center gap-3">
-          <img src="/logo/icon_vitilink.png" alt="VitiLink" class="w-10 h-10 rounded-2xl object-cover shadow-sm" />
+          <img src="/logo/icon_vitilink.png" alt="" class="h-9 w-9 rounded-lg object-cover" />
           <div>
-            <div class="font-semibold text-zinc-950 tracking-tight">{brand}</div>
-            <div class="text-xs text-zinc-500">Marketplace viticole B2B</div>
+            <div class="text-lg font-semibold tracking-tight">{brand}</div>
+            <div class="text-xs font-medium text-white/50">Marketplace viticole B2B</div>
           </div>
         </div>
 
-        <p class="mt-4 text-sm leading-relaxed text-zinc-600 max-w-sm">
-          Une plateforme pensée pour connecter producteurs, négociants et acheteurs autour du raisin,
+        <p class="mt-4 max-w-md text-sm leading-7 text-white/70">
+          Une plateforme pour connecter producteurs, négociants et acheteurs autour du raisin,
           du jus de raisin et du moût avec une expérience claire, rapide et professionnelle.
         </p>
+
+        <a
+          href="/dashboard/mes-annonces/nouveau"
+          class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#28153d] transition hover:-translate-y-0.5 hover:bg-violet-50"
+        >
+          Déposer une annonce
+        </a>
       </div>
 
-      <div>
-        <h4 class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-4">Navigation</h4>
-        <div class="space-y-2.5">
+      <div class="md:col-span-3 md:col-start-7">
+        <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Navigation</h2>
+        <nav class="mt-4 grid gap-3">
           {#each navLinks as link}
-            <a href={link.href} class="block text-sm text-zinc-600 hover:text-[rgb(var(--primary-700))] transition">
+            <a href={link.href} class="text-sm text-white/70 transition hover:text-white">
               {link.label}
             </a>
           {/each}
-        </div>
+        </nav>
       </div>
 
-      <div>
-        <h4 class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-4">Contact</h4>
-        <a href="mailto:contact@vitilink.app" class="block text-sm text-zinc-600 hover:text-[rgb(var(--primary-700))] transition mb-4">
-          contact@vitilink.app
-        </a>
-
-        <a
-          href="https://www.linkedin.com/company/vitilinkfrance"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 rounded-2xl border border-[rgb(var(--border))] bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-[rgb(var(--primary-50))] hover:text-[rgb(var(--primary-800))] transition shadow-sm"
-        >
-          LinkedIn
-        </a>
+      <div class="md:col-span-3">
+        <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Contact</h2>
+        <div class="mt-4 grid gap-3">
+          <a href="mailto:contact@vitilink.app" class="text-sm text-white/70 transition hover:text-white">
+            contact@vitilink.app
+          </a>
+          <a
+            href="https://www.linkedin.com/company/vitilinkfrance"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex w-fit items-center gap-2 rounded-lg border border-white/15 px-3.5 py-2 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white"
+          >
+            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true">
+              <path fill="currentColor" d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.5 8.5H4.5V23.5H.5zM8.5 8.5H12.3V10.6H12.35C12.88 9.6 14.2 8.5 16.2 8.5C20.2 8.5 21 11.1 21 14.6V23.5H17V15.6C17 13.7 17 11.2 14.5 11.2C12 11.2 11.6 13.2 11.6 15.5V23.5H7.6V8.5H8.5z" />
+            </svg>
+            LinkedIn
+          </a>
+        </div>
       </div>
     </div>
 
-    <div class="mt-10 pt-6 border-t border-[rgb(var(--border))] flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p class="text-xs text-zinc-500">© {year} {brand}. Tous droits réservés.</p>
-      <p class="text-xs text-zinc-400">Conçu avec une identité premium, claire et orientée conversion.</p>
+    <div class="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} {brand}. Tous droits réservés.</p>
+      <p>Espace professionnel pour échanges B2B viticoles.</p>
     </div>
   </div>
 </footer>

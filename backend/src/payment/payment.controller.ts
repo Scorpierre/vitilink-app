@@ -39,9 +39,21 @@ export class PaymentController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('orders/:id/sync')
+  sync(@Param('id') id: string, @Req() req) {
+    return this.paymentService.syncOrder(id, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('orders/:id/cancel')
   cancel(@Param('id') id: string, @Req() req) {
     return this.paymentService.cancelOrder(id, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('orders/:id/confirm-delivery')
+  confirmDelivery(@Param('id') id: string, @Req() req) {
+    return this.paymentService.confirmDelivery(id, req.user.userId);
   }
 
   // Public — called by Stripe. Signature is verified with the raw body.

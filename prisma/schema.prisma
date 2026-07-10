@@ -54,6 +54,11 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum DocumentVisibility {
+  PUBLIC
+  BUYER_ONLY
+}
+
 enum OrderStatus {
   PENDING
   PAID
@@ -250,6 +255,7 @@ model Document {
   url    String
   type   DocumentType
   status DocumentStatus @default(PENDING)
+  visibility DocumentVisibility @default(PUBLIC)
 
   originalName String?
   mimeType     String?
@@ -278,6 +284,8 @@ model Document {
 
   @@index([type])
   @@index([status])
+  @@index([visibility])
+  @@index([annonceId])
   @@index([entrepriseId])
   @@index([userId])
 }

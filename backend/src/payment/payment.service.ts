@@ -13,6 +13,12 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { AnnonceStatus, OrderStatus, PaymentStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 
+const paidOrderStatuses: OrderStatus[] = [
+  OrderStatus.PAID,
+  OrderStatus.SHIPPED,
+  OrderStatus.DELIVERED,
+];
+
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
@@ -39,6 +45,10 @@ export class PaymentService {
 
     if (!annonce) throw new NotFoundException('Annonce not found');
 
+    if (dto.quantity !== 1) {
+      throw new BadRequestException('Direct purchase is only available for the full lot');
+    }
+
     if (annonce.creatorUserId === buyerUserId) {
       throw new ForbiddenException('You cannot buy your own annonce');
     }
@@ -53,22 +63,41 @@ export class PaymentService {
 
     // Le buyer a-t-il déjà payé cette annonce ?
     const myPaidOrder = await this.prisma.order.findFirst({
-      where: { annonceId: dto.annonceId, buyerUserId, status: OrderStatus.PAID },
+      where: { annonceId: dto.annonceId, buyerUserId, status: { in: paidOrderStatuses } },
     });
     if (myPaidOrder) {
-      throw new BadRequestException('You have already paid for this annonce');
+      return {
+        orderId: myPaidOrder.id,
+        clientSecret: null,
+        amount: myPaidOrder.totalAmount,
+        currency: myPaidOrder.currency,
+        status: myPaidOrder.status,
+        alreadyPaid: true,
+      };
     }
 
     // Bloquer si un autre acheteur a déjà payé (évite la double vente)
     const paidByAnyone = await this.prisma.order.findFirst({
-      where: { annonceId: dto.annonceId, status: OrderStatus.PAID },
+      where: { annonceId: dto.annonceId, status: { in: paidOrderStatuses } },
     });
     if (paidByAnyone) {
       throw new ForbiddenException('This annonce has already been sold');
     }
 
+    const pendingByAnotherBuyer = await this.prisma.order.findFirst({
+      where: {
+        annonceId: dto.annonceId,
+        status: OrderStatus.PENDING,
+        NOT: { buyerUserId },
+      },
+    });
+    if (pendingByAnotherBuyer) {
+      throw new ForbiddenException('This annonce is already being purchased');
+    }
+
+    const quantity = 1;
     const unitPrice = annonce.price;
-    const totalAmount = Math.round(unitPrice * dto.quantity * 100); // cents
+    const totalAmount = Math.round(unitPrice * quantity * 100); // cents
     if (totalAmount < 1) {
       throw new BadRequestException('Order total is too low');
     }
@@ -79,7 +108,7 @@ export class PaymentService {
     });
 
     if (pending?.stripePaymentIntentId) {
-      const reused = await this.tryReusePendingOrder(pending, dto.quantity, unitPrice, totalAmount);
+      const reused = await this.tryReusePendingOrder(pending, quantity, unitPrice, totalAmount);
       if (reused) return reused;
       // PaymentIntent inutilisable → on annule l'ancienne commande et on en recrée une
       await this.prisma.order.update({
@@ -88,7 +117,7 @@ export class PaymentService {
       });
     }
 
-    return this.createFreshOrder(annonce.id, buyerUserId, dto.quantity, unitPrice, totalAmount);
+    return this.createFreshOrder(annonce.id, buyerUserId, quantity, unitPrice, totalAmount);
   }
 
   private async tryReusePendingOrder(
@@ -105,7 +134,14 @@ export class PaymentService {
       if (intent.status === 'succeeded') {
         // Webhook en retard : on réconcilie et on signale que c'est déjà payé.
         await this.markOrderPaid(intent);
-        throw new BadRequestException('This order has already been paid');
+        return {
+          orderId: pending.id,
+          clientSecret: null,
+          amount: totalAmount,
+          currency: intent.currency,
+          status: OrderStatus.PAID,
+          alreadyPaid: true,
+        };
       }
 
       if (intent.status === 'canceled') {
@@ -210,6 +246,50 @@ export class PaymentService {
     });
   }
 
+  async confirmDelivery(orderId: string, userId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.buyerUserId !== userId) throw new ForbiddenException('Access denied');
+
+    if (order.status === OrderStatus.DELIVERED) {
+      return this.findOrder(orderId, userId);
+    }
+
+    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.SHIPPED) {
+      throw new BadRequestException('Only paid orders can be marked as delivered');
+    }
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.DELIVERED },
+    });
+
+    return this.findOrder(orderId, userId);
+  }
+
+  async syncOrder(orderId: string, userId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.buyerUserId !== userId) throw new ForbiddenException('Access denied');
+
+    if (!order.stripePaymentIntentId) {
+      return this.findOrder(orderId, userId);
+    }
+
+    const intent = await this.stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
+
+    if (intent.status === 'succeeded') {
+      await this.markOrderPaid(intent);
+    } else if (intent.status === 'canceled') {
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CANCELED },
+      });
+    }
+
+    return this.findOrder(orderId, userId);
+  }
+
   async handleWebhook(rawBody: Buffer, signature: string) {
     if (!this.webhookSecret) {
       throw new InternalServerErrorException('Webhook secret not configured');
@@ -259,10 +339,12 @@ export class PaymentService {
       return;
     }
 
+    const wasAlreadyPaid = paidOrderStatuses.includes(order.status);
+
     await this.prisma.$transaction([
       this.prisma.order.update({
         where: { id: order.id },
-        data: { status: OrderStatus.PAID },
+        data: { status: wasAlreadyPaid ? order.status : OrderStatus.PAID },
       }),
       this.prisma.annonce.update({
         where: { id: order.annonceId },
@@ -285,6 +367,8 @@ export class PaymentService {
     ]);
 
     this.logger.log(`Order ${order.id} marked as PAID`);
+
+    if (wasAlreadyPaid) return;
 
     // Emails après la transaction — les erreurs mail ne doivent pas bloquer le paiement.
     const mailData = {
@@ -341,7 +425,23 @@ export class PaymentService {
         ],
       },
       include: {
-        annonce: { select: { id: true, title: true, images: true } },
+        annonce: {
+          select: {
+            id: true,
+            title: true,
+            images: true,
+            creatorUserId: true,
+            price: true,
+            volume: true,
+            volumeUnit: true,
+            location: true,
+            city: true,
+            region: true,
+            productType: true,
+            status: true,
+            entreprise: { select: { id: true, name: true } },
+          },
+        },
         buyer: { select: { id: true, username: true } },
         payment: true,
       },
@@ -354,7 +454,21 @@ export class PaymentService {
       where: { id: orderId },
       include: {
         annonce: {
-          select: { id: true, title: true, images: true, creatorUserId: true },
+          select: {
+            id: true,
+            title: true,
+            images: true,
+            creatorUserId: true,
+            price: true,
+            volume: true,
+            volumeUnit: true,
+            location: true,
+            city: true,
+            region: true,
+            productType: true,
+            status: true,
+            entreprise: { select: { id: true, name: true } },
+          },
         },
         buyer: { select: { id: true, username: true } },
         payment: true,

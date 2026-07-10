@@ -7,6 +7,12 @@ export const DocumentAPI = {
   listEntrepriseDocuments: (): Promise<ApiResponse<DocumentItem[]>> =>
     http('/document/entreprise'),
 
+  fileUrl: (path?: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${API_BASE}${path}`;
+  },
+
   deleteDocument: (id: string) =>
     http(`/document/${id}/delete`, {
       method: 'POST'

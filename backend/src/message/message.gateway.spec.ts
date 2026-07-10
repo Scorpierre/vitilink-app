@@ -136,6 +136,26 @@ describe('MessageGateway', () => {
       expect(roomEmit).toHaveBeenCalledWith('newMessage', mockMessage);
     });
 
+    it('should include clientId in emitted message payload when provided', async () => {
+      const mockMessage = { id: 'msg-1', content: 'Hello' };
+      messageService.create.mockResolvedValue(mockMessage as any);
+
+      const roomEmit = jest.fn();
+      gateway.server = { to: jest.fn().mockReturnValue({ emit: roomEmit }) } as any;
+
+      const client = { data: { userId: 'user-1' }, emit: jest.fn() } as any;
+
+      await gateway.handleMessage(
+        { conversationId: 'conv-1', content: 'Hello', clientId: 'local-1' },
+        client,
+      );
+
+      expect(roomEmit).toHaveBeenCalledWith('newMessage', {
+        ...mockMessage,
+        clientId: 'local-1',
+      });
+    });
+
     it('should emit error event to client if service throws', async () => {
       messageService.create.mockRejectedValue(new Error('Accès refusé'));
 
@@ -145,6 +165,23 @@ describe('MessageGateway', () => {
       await gateway.handleMessage({ conversationId: 'conv-1', content: 'Hi' }, client);
 
       expect(clientEmit).toHaveBeenCalledWith('error', { message: 'Accès refusé' });
+    });
+
+    it('should emit messageError with clientId if service throws for an optimistic message', async () => {
+      messageService.create.mockRejectedValue(new Error('Accès refusé'));
+
+      const clientEmit = jest.fn();
+      const client = { data: { userId: 'user-1' }, emit: clientEmit } as any;
+
+      await gateway.handleMessage(
+        { conversationId: 'conv-1', content: 'Hi', clientId: 'local-1' },
+        client,
+      );
+
+      expect(clientEmit).toHaveBeenCalledWith('messageError', {
+        clientId: 'local-1',
+        message: 'Accès refusé',
+      });
     });
 
     it('should emit generic error message if error has no message', async () => {

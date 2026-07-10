@@ -28,14 +28,7 @@ export class DocumentService {
     label?: string;
     file: any;
   }) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: params.userId },
-      select: { entrepriseId: true },
-    });
-
-    if (!user?.entrepriseId) {
-      throw new NotFoundException("Aucune entreprise liée à l'utilisateur.");
-    }
+    const entrepriseId = await this.ensureEntreprise(params.userId);
 
     const url = `/uploads/entreprise/${params.file.filename}`;
 
@@ -48,12 +41,12 @@ export class DocumentService {
         mimeType: params.file.mimetype,
         sizeBytes: params.file.size,
         label: params.label,
-        entrepriseId: user.entrepriseId,
+        entrepriseId,
       },
     });
 
     await this.prisma.entreprise.update({
-      where: { id: user.entrepriseId },
+      where: { id: entrepriseId },
       data: {
         status: 'PENDING',
         verificationNote: null,
@@ -62,6 +55,40 @@ export class DocumentService {
     });
 
     return document;
+  }
+
+  private async ensureEntreprise(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, entrepriseId: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable.');
+    }
+
+    if (user.entrepriseId) {
+      return user.entrepriseId;
+    }
+
+    const entreprise = await this.prisma.entreprise.create({
+      data: {
+        name: user.username ? `Entreprise ${user.username}` : 'Mon entreprise',
+        type: 'OTHER',
+        country: 'France',
+        appellations: [],
+        grapeVarieties: [],
+        soughtProducts: [],
+        status: 'PENDING',
+      },
+    });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { entrepriseId: entreprise.id },
+    });
+
+    return entreprise.id;
   }
 
   async deleteDocument(documentId: string, userId: string) {

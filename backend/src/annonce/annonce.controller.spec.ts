@@ -42,12 +42,12 @@ describe('AnnonceController', () => {
     it('should forward query filters to service', async () => {
       annonceService.listMarketplace.mockResolvedValue([]);
 
-      await controller.listMarketplace('bio', 'Bordeaux', 'Vin en vrac');
+      await controller.listMarketplace('bio', 'Bordeaux', 'Raisin');
 
       expect(annonceService.listMarketplace).toHaveBeenCalledWith({
         q: 'bio',
         region: 'Bordeaux',
-        productType: 'Vin en vrac',
+        productType: 'Raisin',
       });
     });
   });
@@ -76,28 +76,36 @@ describe('AnnonceController', () => {
   describe('create', () => {
     it('should create annonce and return CREATED', async () => {
       annonceService.create.mockResolvedValue({ id: 'new' } as any);
+      const imageFile = { filename: 'photo.jpg' };
+      const documentFile = { filename: 'analyse.pdf' };
+      const dto = { title: 'New', certifications: [], images: [] } as any;
 
       const result = await controller.create(
-        [],
-        { title: 'New', certifications: [], images: [] } as any,
+        { images: [imageFile], documents: [documentFile] },
+        dto,
         req,
       );
       expect(result.status).toBe(HttpStatus.CREATED);
       expect(result.message).toBe('Annonce publiée.');
+      expect(annonceService.create).toHaveBeenCalledWith('user-1', dto, [imageFile], [documentFile]);
     });
   });
 
   describe('updateMine', () => {
     it('should update annonce and return OK', async () => {
       annonceService.updateMine.mockResolvedValue({ id: 'annonce-1' } as any);
+      const imageFile = { filename: 'photo.jpg' };
+      const documentFile = { filename: 'analyse.pdf' };
+      const dto = { title: 'Updated' } as any;
 
       const result = await controller.updateMine(
         'annonce-1',
-        [],
-        { title: 'Updated' } as any,
+        { images: [imageFile], documents: [documentFile] },
+        dto,
         req,
       );
       expect(result.status).toBe(HttpStatus.OK);
+      expect(annonceService.updateMine).toHaveBeenCalledWith('annonce-1', 'user-1', dto, [imageFile], [documentFile]);
     });
   });
 

@@ -1,12 +1,12 @@
 import { http } from './http';
-import type { User } from '$lib/types';
+import type { User, UserRole } from '$lib/types';
 
 export interface UpdateProfileBody {
   username?: string;
-  role?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
+  role?: UserRole;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
 }
 
 export const UserAPI = {

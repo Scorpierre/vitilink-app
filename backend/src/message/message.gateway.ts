@@ -54,7 +54,7 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() data: { conversationId: string; content: string },
+    @MessageBody() data: { conversationId: string; content: string; clientId?: string },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = client.data.userId;
@@ -62,8 +62,13 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
     try {
       const message = await this.messageService.create(userId, data.conversationId, data.content);
-      this.server.to(data.conversationId).emit('newMessage', message);
+      const payload = data.clientId ? { ...message, clientId: data.clientId } : message;
+      this.server.to(data.conversationId).emit('newMessage', payload);
     } catch (error: any) {
+      client.emit('messageError', {
+        clientId: data.clientId,
+        message: error?.message ?? 'Unknown error',
+      });
       client.emit('error', { message: error?.message ?? 'Unknown error' });
     }
   }

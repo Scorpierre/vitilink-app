@@ -19,7 +19,7 @@
     text={mode === 'mine'
       ? 'Déposez votre première annonce pour rendre vos lots visibles sur la marketplace.'
       : 'Les annonces publiées par les professionnels apparaîtront ici.'}
-    actionHref={mode === 'mine' ? '/home/mes-annonces/new' : ''}
+    actionHref={mode === 'mine' ? '/dashboard/mes-annonces/nouveau' : ''}
     actionLabel={mode === 'mine' ? 'Créer une annonce' : ''}
   />
 {/if}

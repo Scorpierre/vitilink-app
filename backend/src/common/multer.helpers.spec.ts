@@ -4,6 +4,7 @@ import {
   annonceDestination,
   annonceFilename,
   annonceFileFilter,
+  annonceMixedFileFilter,
   entrepriseDestination,
   entrepriseFilename,
   entrepriseFileFilter,
@@ -71,6 +72,28 @@ describe('multer helpers', () => {
       const [err, accept] = cb.mock.calls[0];
       expect(err).toBeInstanceOf(BadRequestException);
       expect(accept).toBe(false);
+    });
+  });
+
+  describe('annonceMixedFileFilter', () => {
+    it('should accept images on the images field', () => {
+      const cb = jest.fn();
+      annonceMixedFileFilter(null, { fieldname: 'images', mimetype: 'image/webp' }, cb);
+      expect(cb).toHaveBeenCalledWith(null, true);
+    });
+
+    it('should reject PDF files on the images field', () => {
+      const cb = jest.fn();
+      annonceMixedFileFilter(null, { fieldname: 'images', mimetype: 'application/pdf' }, cb);
+      const [err, accept] = cb.mock.calls[0];
+      expect(err).toBeInstanceOf(BadRequestException);
+      expect(accept).toBe(false);
+    });
+
+    it('should accept PDF files on the documents field', () => {
+      const cb = jest.fn();
+      annonceMixedFileFilter(null, { fieldname: 'documents', mimetype: 'application/pdf' }, cb);
+      expect(cb).toHaveBeenCalledWith(null, true);
     });
   });
 

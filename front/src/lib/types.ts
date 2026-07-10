@@ -23,18 +23,22 @@ export type DocumentType =
   | 'OTHER';
 
 export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type DocumentVisibility = 'PUBLIC' | 'BUYER_ONLY';
 export type AnnonceStatus = 'DRAFT' | 'PUBLISHED' | 'SOLD' | 'ARCHIVED';
+export type AnnoncePurchaseStatus = 'AVAILABLE' | 'IN_PROGRESS' | 'PAID';
 
 export interface DocumentItem {
   id: string;
   url: string;
   type: DocumentType;
   status: DocumentStatus;
+  visibility?: DocumentVisibility;
   originalName?: string;
   mimeType?: string;
   sizeBytes?: number;
   label?: string;
   comment?: string;
+  annonceId?: string;
   reviewedAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -109,11 +113,14 @@ export interface Annonce {
   restrictToVerified: boolean;
   creatorUserId: string;
   entrepriseId: string;
-  entreprise?: Pick<Entreprise, 'id' | 'name' | 'type' | 'status' | 'city' | 'region' | 'country'>;
+  entreprise?: Entreprise | null;
   creator?: Pick<User, 'id' | 'username' | 'firstName' | 'lastName'>;
   orders?: AnnonceOrder[];
+  documents?: DocumentItem[];
   _count?: { orders: number };
+  purchaseStatus?: AnnoncePurchaseStatus;
   soldOut?: boolean;
+  pendingPurchase?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -145,6 +152,20 @@ export interface CreateAnnonceBody {
   existingImages?: string[];
   restrictToVerified: boolean;
   images: File[];
+  documents?: AnnonceDocumentUpload[];
+  existingDocuments?: ExistingAnnonceDocument[];
+}
+
+export interface AnnonceDocumentUpload {
+  file: File;
+  label?: string;
+  visibility: DocumentVisibility;
+}
+
+export interface ExistingAnnonceDocument {
+  id: string;
+  label?: string;
+  visibility: DocumentVisibility;
 }
 
 export interface LoginBody {
@@ -214,7 +235,21 @@ export interface Order {
   status: OrderStatus;
   annonceId: string;
   buyerUserId: string;
-  annonce?: { id: string; title: string; images?: string[]; creatorUserId?: string };
+  annonce?: {
+    id: string;
+    title: string;
+    images?: string[];
+    creatorUserId?: string;
+    price?: number;
+    volume?: number;
+    volumeUnit?: string;
+    location?: string;
+    city?: string;
+    region?: string;
+    productType?: string;
+    status?: AnnonceStatus;
+    entreprise?: Pick<Entreprise, 'id' | 'name'> | null;
+  };
   buyer?: { id: string; username: string };
   payment?: Payment | null;
   createdAt: string;
@@ -223,9 +258,11 @@ export interface Order {
 
 export interface CreateOrderResponse {
   orderId: string;
-  clientSecret: string;
+  clientSecret: string | null;
   amount: number;
   currency: string;
+  status?: OrderStatus;
+  alreadyPaid?: boolean;
 }
 
 export interface Conversation {

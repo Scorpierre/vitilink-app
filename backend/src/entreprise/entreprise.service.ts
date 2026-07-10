@@ -90,25 +90,25 @@ export class EntrepriseService {
     if (!user.entrepriseId) {
       const entreprise = await this.prisma.entreprise.create({
         data: {
-          name: dto.name || 'Mon entreprise',
+          name: requiredString(dto.name, 'Mon entreprise'),
           type: dto.type || 'OTHER',
-          siren: dto.siren,
-          siret: dto.siret,
-          vatNumber: dto.vatNumber,
-          cviNumber: dto.cviNumber,
-          addressLine1: dto.addressLine1,
-          addressLine2: dto.addressLine2,
-          postalCode: dto.postalCode,
-          city: dto.city,
-          country: dto.country || 'France',
-          region: dto.region,
-          department: dto.department,
+          siren: nullableString(dto.siren),
+          siret: nullableString(dto.siret),
+          vatNumber: nullableString(dto.vatNumber),
+          cviNumber: nullableString(dto.cviNumber),
+          addressLine1: nullableString(dto.addressLine1),
+          addressLine2: nullableString(dto.addressLine2),
+          postalCode: nullableString(dto.postalCode),
+          city: nullableString(dto.city),
+          country: nullableString(dto.country) || 'France',
+          region: nullableString(dto.region),
+          department: nullableString(dto.department),
           appellations: dto.appellations || [],
           grapeVarieties: dto.grapeVarieties || [],
-          surfaceHa: dto.surfaceHa,
-          annualVolume: dto.annualVolume,
+          surfaceHa: nullableNumber(dto.surfaceHa),
+          annualVolume: nullableNumber(dto.annualVolume),
           soughtProducts: dto.soughtProducts || [],
-          soughtVolume: dto.soughtVolume,
+          soughtVolume: nullableString(dto.soughtVolume),
           status: 'PENDING',
         },
       });
@@ -121,28 +121,32 @@ export class EntrepriseService {
       return this.refreshVerificationStatus(entreprise.id);
     }
 
+    if (!user.entreprise) {
+      throw new NotFoundException('Entreprise introuvable.');
+    }
+
     const entreprise = await this.prisma.entreprise.update({
       where: { id: user.entrepriseId },
       data: {
-        name: dto.name,
-        type: dto.type,
-        siren: dto.siren,
-        siret: dto.siret,
-        vatNumber: dto.vatNumber,
-        cviNumber: dto.cviNumber,
-        addressLine1: dto.addressLine1,
-        addressLine2: dto.addressLine2,
-        postalCode: dto.postalCode,
-        city: dto.city,
-        country: dto.country,
-        region: dto.region,
-        department: dto.department,
-        appellations: dto.appellations,
-        grapeVarieties: dto.grapeVarieties,
-        surfaceHa: dto.surfaceHa,
-        annualVolume: dto.annualVolume,
-        soughtProducts: dto.soughtProducts,
-        soughtVolume: dto.soughtVolume,
+        name: requiredString(dto.name, user.entreprise.name),
+        type: dto.type || user.entreprise.type,
+        siren: nullableString(dto.siren),
+        siret: nullableString(dto.siret),
+        vatNumber: nullableString(dto.vatNumber),
+        cviNumber: nullableString(dto.cviNumber),
+        addressLine1: nullableString(dto.addressLine1),
+        addressLine2: nullableString(dto.addressLine2),
+        postalCode: nullableString(dto.postalCode),
+        city: nullableString(dto.city),
+        country: nullableString(dto.country),
+        region: nullableString(dto.region),
+        department: nullableString(dto.department),
+        appellations: dto.appellations || [],
+        grapeVarieties: dto.grapeVarieties || [],
+        surfaceHa: nullableNumber(dto.surfaceHa),
+        annualVolume: nullableNumber(dto.annualVolume),
+        soughtProducts: dto.soughtProducts || [],
+        soughtVolume: nullableString(dto.soughtVolume),
         status: 'PENDING',
         verificationNote: null,
         verifiedAt: null,
@@ -151,4 +155,20 @@ export class EntrepriseService {
 
     return this.refreshVerificationStatus(entreprise.id);
   }
+}
+
+function requiredString(value: string | null | undefined, fallback: string) {
+  const cleaned = nullableString(value);
+  return cleaned || fallback;
+}
+
+function nullableString(value: string | null | undefined) {
+  if (value === undefined || value === null) return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function nullableNumber(value: number | null | undefined) {
+  if (value === undefined || value === null) return null;
+  return Number.isFinite(Number(value)) ? Number(value) : null;
 }

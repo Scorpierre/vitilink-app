@@ -59,6 +59,21 @@ export class CreateAnnonceDto {
   existingImages?: string[] | string;
 
   @IsOptional()
+  documentLabels?: string[] | string;
+
+  @IsOptional()
+  documentVisibilities?: string[] | string;
+
+  @IsOptional()
+  existingDocumentIds?: string[] | string;
+
+  @IsOptional()
+  existingDocumentLabels?: string[] | string;
+
+  @IsOptional()
+  existingDocumentVisibilities?: string[] | string;
+
+  @IsOptional()
   @IsBooleanString()
   restrictToVerified?: string;
 }

@@ -14,16 +14,16 @@ describe('DocumentService', () => {
   let service: DocumentService;
   let prisma: any;
 
-  beforeEach(async () => {
+    beforeEach(async () => {
     prisma = {
-      user: { findUnique: jest.fn() },
+      user: { findUnique: jest.fn(), update: jest.fn() },
       document: {
         findMany: jest.fn(),
         create: jest.fn(),
         findUnique: jest.fn(),
         delete: jest.fn(),
       },
-      entreprise: { update: jest.fn() },
+      entreprise: { create: jest.fn(), update: jest.fn() },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -55,8 +55,34 @@ describe('DocumentService', () => {
   });
 
   describe('uploadEntrepriseDocument', () => {
-    it('should throw NotFoundException if user has no entreprise', async () => {
-      prisma.user.findUnique.mockResolvedValue({ entrepriseId: null });
+    it('should create a pending entreprise if user has none', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', username: 'alice', entrepriseId: null });
+      prisma.entreprise.create.mockResolvedValue({ id: 'ent-new' });
+      prisma.user.update.mockResolvedValue({});
+      prisma.document.create.mockResolvedValue({ id: 'doc-1', entrepriseId: 'ent-new' });
+      prisma.entreprise.update.mockResolvedValue({});
+
+      const result = await service.uploadEntrepriseDocument({ userId: 'user-1', type: 'KBIS', file: mockFile });
+
+      expect(result.id).toBe('doc-1');
+      expect(prisma.entreprise.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ name: 'Entreprise alice', type: 'OTHER', status: 'PENDING' }),
+        }),
+      );
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { entrepriseId: 'ent-new' },
+      });
+      expect(prisma.document.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ entrepriseId: 'ent-new' }),
+        }),
+      );
+    });
+
+    it('should throw NotFoundException if user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(
         service.uploadEntrepriseDocument({ userId: 'user-1', type: 'KBIS', file: mockFile }),

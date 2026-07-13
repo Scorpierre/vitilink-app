@@ -177,7 +177,7 @@
     if (isLast) {
       const data = await UserAPI.getProfile().catch(() => null);
       if (data?.result) user.setUser(data.result);
-      goto('/home');
+      goto('/dashboard');
     } else {
       direction = 1;
       step++;

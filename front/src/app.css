@@ -36,6 +36,82 @@ body {
   background: rgba(139, 92, 246, 0.18);
 }
 
+@keyframes page-content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes view-transition-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes view-transition-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes loading-progress {
+  0% {
+    transform: translateX(-100%);
+    width: 45%;
+    opacity: 0.5;
+  }
+  50% {
+    width: 72%;
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%);
+    width: 45%;
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading-progress-bar {
+    animation: loading-progress 1.35s ease-in-out infinite;
+  }
+
+  ::view-transition-old(root) {
+    animation: view-transition-out 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: view-transition-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .page-transition-surface {
+    will-change: opacity, transform;
+  }
+
+  .page-transition-surface :where(section, aside, form) {
+    animation: page-content-reveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;

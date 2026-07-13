@@ -4,7 +4,7 @@ import { http } from './http';
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export const AnnonceAPI = {
-  listMarketplace: (filters: { q?: string; region?: string; productType?: string } = {}) => {
+  listMarketplace: (filters: { q?: string; region?: string; productType?: string; availability?: string } = {}) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
@@ -85,6 +85,22 @@ function buildAnnonceFormData(body: CreateAnnonceBody) {
     }
   }
   body.images.forEach((image) => formData.append('images', image));
+  if (body.existingDocuments) {
+    if (body.existingDocuments.length) {
+      body.existingDocuments.forEach((document) => {
+        formData.append('existingDocumentIds', document.id);
+        formData.append('existingDocumentLabels', document.label ?? '');
+        formData.append('existingDocumentVisibilities', document.visibility);
+      });
+    } else {
+      formData.append('existingDocumentIds', '');
+    }
+  }
+  body.documents?.forEach((document) => {
+    formData.append('documents', document.file);
+    formData.append('documentLabels', document.label ?? '');
+    formData.append('documentVisibilities', document.visibility);
+  });
 
   return formData;
 }

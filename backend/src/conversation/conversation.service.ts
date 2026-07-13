@@ -18,7 +18,7 @@ export class ConversationService {
       throw new ForbiddenException('You cannot contact yourself');
     }
 
-    if (annonce.status !== AnnonceStatus.PUBLISHED) {
+    if (annonce.status === AnnonceStatus.ARCHIVED) {
       throw new ForbiddenException('This annonce is not available');
     }
 

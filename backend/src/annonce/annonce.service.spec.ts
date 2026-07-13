@@ -17,6 +17,16 @@ const mockAnnonce = {
   images: ['/uploads/annonces/img1.jpg'],
 };
 
+const validImageFiles = [{ filename: 'photo.jpg' }];
+const validDocumentFiles = [
+  {
+    filename: 'analyse.pdf',
+    originalname: 'Analyse laboratoire.pdf',
+    mimetype: 'application/pdf',
+    size: 2048,
+  },
+];
+
 describe('AnnonceService', () => {
   let service: AnnonceService;
   let prisma: any;
@@ -31,6 +41,11 @@ describe('AnnonceService', () => {
       },
       order: {
         count: jest.fn().mockResolvedValue(0),
+      },
+      document: {
+        deleteMany: jest.fn(),
+        update: jest.fn(),
+        createMany: jest.fn(),
       },
       user: { findUnique: jest.fn() },
     };
@@ -51,6 +66,25 @@ describe('AnnonceService', () => {
 
       const result = await service.listMarketplace({});
       expect(result).toHaveLength(1);
+      expect(prisma.annonce.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: { not: AnnonceStatus.ARCHIVED } }),
+        }),
+      );
+    });
+
+    it('should expose purchase status from active orders', async () => {
+      prisma.annonce.findMany.mockResolvedValue([
+        { ...mockAnnonce, orders: [{ status: 'PENDING' }] },
+      ]);
+
+      const result = await service.listMarketplace({});
+      expect(result[0]).toMatchObject({
+        purchaseStatus: 'IN_PROGRESS',
+        pendingPurchase: true,
+        soldOut: false,
+      });
+      expect(result[0]).not.toHaveProperty('orders');
     });
 
     it('should apply region filter', async () => {
@@ -68,11 +102,11 @@ describe('AnnonceService', () => {
     it('should apply productType filter', async () => {
       prisma.annonce.findMany.mockResolvedValue([]);
 
-      await service.listMarketplace({ productType: 'Vin en vrac' });
+      await service.listMarketplace({ productType: 'Raisin' });
 
       expect(prisma.annonce.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ productType: 'Vin en vrac' }),
+          where: expect.objectContaining({ productType: 'Raisin' }),
         }),
       );
     });
@@ -116,6 +150,34 @@ describe('AnnonceService', () => {
       const result = await service.findOne('annonce-1');
       expect(result.id).toBe('annonce-1');
     });
+
+    it('should hide buyer-only documents for visitors without a paid order', async () => {
+      prisma.annonce.findUnique.mockResolvedValue({
+        ...mockAnnonce,
+        documents: [
+          { id: 'doc-public', visibility: 'PUBLIC' },
+          { id: 'doc-private', visibility: 'BUYER_ONLY' },
+        ],
+      });
+
+      const result = await service.findOne('annonce-1', 'buyer-1');
+
+      expect(result.documents).toEqual([{ id: 'doc-public', visibility: 'PUBLIC' }]);
+    });
+
+    it('should expose buyer-only documents to the seller', async () => {
+      prisma.annonce.findUnique.mockResolvedValue({
+        ...mockAnnonce,
+        documents: [
+          { id: 'doc-public', visibility: 'PUBLIC' },
+          { id: 'doc-private', visibility: 'BUYER_ONLY' },
+        ],
+      });
+
+      const result = await service.findOne('annonce-1', 'user-1');
+
+      expect(result.documents).toHaveLength(2);
+    });
   });
 
   describe('create', () => {
@@ -157,25 +219,88 @@ describe('AnnonceService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException for unsupported product type', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
+
+      await expect(
+        service.create('user-1', { title: 'Test', productType: 'Vin en vrac' } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should normalize legacy product labels to the allowed labels', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
+      prisma.annonce.create.mockResolvedValue(mockAnnonce);
+
+      await service.create('user-1', { title: 'Test', productType: 'Moût' } as any, validImageFiles);
+
+      expect(prisma.annonce.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ productType: 'Moût de raisin' }),
+        }),
+      );
+    });
+
     it('should create annonce with image files', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
       prisma.annonce.create.mockResolvedValue({ ...mockAnnonce, id: 'new-annonce' });
 
-      const files = [{ filename: 'photo.jpg' }];
       const result = await service.create(
         'user-1',
         { title: 'Vin rouge', certifications: [], restrictToVerified: 'false' } as any,
-        files,
+        validImageFiles,
       );
 
       expect(result.id).toBe('new-annonce');
+    });
+
+    it('should attach sale documents with the selected visibility', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
+      prisma.annonce.create.mockResolvedValue(mockAnnonce);
+
+      await service.create(
+        'user-1',
+        {
+          title: 'Vin rouge',
+          certifications: [],
+          documentLabels: ['Analyse labo'],
+          documentVisibilities: ['BUYER_ONLY'],
+        } as any,
+        validImageFiles,
+        validDocumentFiles,
+      );
+
+      expect(prisma.annonce.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            documents: {
+              create: [
+                expect.objectContaining({
+                  label: 'Analyse labo',
+                  type: 'SALE_DOC',
+                  status: 'APPROVED',
+                  visibility: 'BUYER_ONLY',
+                  url: '/uploads/annonces/analyse.pdf',
+                }),
+              ],
+            },
+          }),
+        }),
+      );
+    });
+
+    it('should throw BadRequestException when no image is provided', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
+
+      await expect(
+        service.create('user-1', { title: 'Test', certifications: [] } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should handle undefined certifications gracefully', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
       prisma.annonce.create.mockResolvedValue(mockAnnonce);
 
-      await service.create('user-1', { title: 'Test' } as any);
+      await service.create('user-1', { title: 'Test' } as any, validImageFiles);
 
       expect(prisma.annonce.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -188,12 +313,16 @@ describe('AnnonceService', () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', entrepriseId: 'ent-1' });
       prisma.annonce.create.mockResolvedValue(mockAnnonce);
 
-      await service.create('user-1', {
-        title: 'Test',
-        price: '1500',
-        vintage: '2020',
-        certifications: [],
-      } as any);
+      await service.create(
+        'user-1',
+        {
+          title: 'Test',
+          price: '1500',
+          vintage: '2020',
+          certifications: [],
+        } as any,
+        validImageFiles,
+      );
 
       expect(prisma.annonce.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -209,6 +338,7 @@ describe('AnnonceService', () => {
       await service.create(
         'user-1',
         { title: 'Test', city: 'Bordeaux', region: 'Nouvelle-Aquitaine', certifications: [] } as any,
+        validImageFiles,
       );
 
       expect(prisma.annonce.create).toHaveBeenCalledWith(
@@ -225,6 +355,7 @@ describe('AnnonceService', () => {
       await service.create(
         'user-1',
         { title: 'Test', certifications: 'Bio,HVE' } as any,
+        validImageFiles,
       );
 
       expect(prisma.annonce.create).toHaveBeenCalledWith(
@@ -256,6 +387,14 @@ describe('AnnonceService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if updated product type is unsupported', async () => {
+      prisma.annonce.findUnique.mockResolvedValue(mockAnnonce);
+
+      await expect(
+        service.updateMine('annonce-1', 'user-1', { title: 'Updated', productType: 'Matériel' } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('should keep existing images that are still referenced', async () => {
       prisma.annonce.findUnique.mockResolvedValue(mockAnnonce);
       prisma.annonce.update.mockResolvedValue({ ...mockAnnonce, title: 'Updated' });
@@ -269,21 +408,16 @@ describe('AnnonceService', () => {
       expect(result.title).toBe('Updated');
     });
 
-    it('should drop existing images when existingImages is empty array', async () => {
+    it('should reject update when no image remains', async () => {
       prisma.annonce.findUnique.mockResolvedValue(mockAnnonce);
-      prisma.annonce.update.mockResolvedValue({ ...mockAnnonce, images: [] });
 
-      await service.updateMine('annonce-1', 'user-1', {
-        title: 'Updated',
-        certifications: [],
-        existingImages: [],
-      } as any);
-
-      expect(prisma.annonce.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ images: [] }),
-        }),
-      );
+      await expect(
+        service.updateMine('annonce-1', 'user-1', {
+          title: 'Updated',
+          certifications: [],
+          existingImages: [],
+        } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should keep all existing images when existingImages is undefined', async () => {

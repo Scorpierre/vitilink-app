@@ -21,7 +21,7 @@
           <img src="/logo/icon_vitilink.png" alt="" class="h-9 w-9 rounded-lg object-cover" />
           <div>
             <div class="text-lg font-semibold tracking-tight">{brand}</div>
-            <div class="text-xs font-medium text-white/50">Marketplace viticole B2B</div>
+            <div class="text-xs font-medium text-white/50">Marketplace B2B viticole</div>
           </div>
         </div>
 
@@ -32,7 +32,7 @@
 
         <a
           href="/dashboard/mes-annonces/nouveau"
-          class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#28153d] transition hover:-translate-y-0.5 hover:bg-violet-50"
+          class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] transition hover:-translate-y-0.5 hover:bg-violet-50"
         >
           Déposer une annonce
         </a>

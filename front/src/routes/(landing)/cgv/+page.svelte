@@ -6,7 +6,7 @@
   />
 </svelte:head>
 
-<main class="bg-[#fbfaf8] px-4 pb-20 pt-28 text-[#201927] sm:px-6 lg:px-8">
+<main class="bg-[#fbfaf8] px-4 pb-20 pt-28 text-[#24152f] sm:px-6 lg:px-8">
   <div class="mx-auto max-w-5xl">
     <section class="overflow-hidden rounded-[2rem] bg-[#181121] text-white shadow-[0_24px_70px_rgba(24,17,33,0.18)]">
       <div class="relative isolate px-6 py-10 sm:px-8 lg:px-10">

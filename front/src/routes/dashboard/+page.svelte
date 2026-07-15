@@ -72,6 +72,7 @@
       helper: `${annonces.length} annonce${annonces.length !== 1 ? 's' : ''} au total`,
       detail: `${draftAnnonceCount} brouillon${draftAnnonceCount !== 1 ? 's' : ''}`,
       color: 'violet',
+      href: '/dashboard/mes-annonces',
     },
     {
       label: 'Messages reçus',
@@ -79,6 +80,7 @@
       helper: `${conversations.length} conversation${conversations.length !== 1 ? 's' : ''}`,
       detail: 'Total calculé depuis vos conversations',
       color: 'emerald',
+      href: '/dashboard/conversations',
     },
     {
       label: 'Contacts',
@@ -86,6 +88,7 @@
       helper: 'Interlocuteurs distincts',
       detail: 'Acheteurs ou vendeurs liés à vos échanges',
       color: 'amber',
+      href: '/dashboard/conversations',
     },
     {
       label: 'Commandes',
@@ -93,6 +96,7 @@
       helper: `${orderInProgressCount} en cours`,
       detail: 'Données issues du module paiement',
       color: 'rose',
+      href: '/dashboard/commandes',
     },
   ]);
 
@@ -141,6 +145,7 @@
       detail: annonce.title,
       type: 'annonce' as const,
       tone: annonce.status === 'PUBLISHED' ? ('violet' as const) : ('amber' as const),
+      href: '/dashboard/mes-annonces',
     }));
 
     const conversationEvents = conversationItems.map((conversation) => {
@@ -152,6 +157,7 @@
         detail: conversation.annonce.title,
         type: 'message' as const,
         tone: 'emerald' as const,
+        href: `/dashboard/conversations/${conversation.id}`,
       };
     });
 
@@ -161,6 +167,7 @@
       detail: order.annonce?.title ?? `Commande ${order.id.slice(0, 8)}`,
       type: 'order' as const,
       tone: orderActivityTone(order.status),
+      href: '/dashboard/commandes',
     }));
 
     return [...annonceEvents, ...conversationEvents, ...orderEvents]
@@ -226,24 +233,17 @@
 </svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 pb-10 pt-4 sm:px-6 lg:px-8 lg:pb-14">
-  <section class="relative isolate overflow-hidden rounded-lg border border-white bg-[#24152f] shadow-[0_28px_80px_rgba(36,21,47,0.20)]">
+  <section class="relative isolate overflow-hidden rounded-lg border border-violet-100 shadow-[0_28px_80px_rgba(36,21,47,0.12)]">
     <img
       src="/assets/images/header.jpg"
       alt=""
       class="absolute inset-0 -z-20 h-full w-full object-cover object-[62%_center]"
     />
-    <div
-      class="absolute inset-0 -z-10"
-      style="background:
-        linear-gradient(92deg, #24152f 0%, rgba(36, 21, 47, 0.98) 30%, rgba(36, 21, 47, 0.84) 47%, rgba(36, 21, 47, 0.48) 67%, rgba(36, 21, 47, 0.16) 100%),
-        linear-gradient(180deg, rgba(36, 21, 47, 0.18) 0%, rgba(36, 21, 47, 0.04) 44%, rgba(36, 21, 47, 0.30) 100%);"
-    ></div>
-    <div class="absolute inset-y-0 left-0 -z-10 w-[58%] bg-[radial-gradient(circle_at_18%_24%,rgba(139,92,246,0.28),transparent_34%)]"></div>
 
     <div class="grid gap-8 px-5 py-7 sm:px-7 sm:py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-9">
-      <div class="max-w-3xl text-white">
-        <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur">
-          <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+      <div class="max-w-3xl text-[#24152f]">
+        <div class="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/80 px-3 py-1 text-xs font-semibold text-[#24152f] backdrop-blur">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
           Données en temps réel
         </div>
 
@@ -251,20 +251,20 @@
           Bonjour, {profile?.username ?? $user?.username ?? 'Utilisateur'}
         </h1>
 
-        <p class="mt-4 max-w-2xl text-sm leading-7 text-white/74 sm:text-base">
+        <p class="mt-4 max-w-2xl text-sm leading-7 text-[#24152f]/80 sm:text-base">
           Vos indicateurs suivent vos annonces, vos conversations, vos commandes et votre profil professionnel.
         </p>
 
         <div class="mt-7 flex flex-col gap-3 sm:flex-row">
           <a
             href="/dashboard/mes-annonces/nouveau"
-            class="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-50"
+            class="inline-flex items-center justify-center rounded-lg bg-[#5b2df2] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(91,45,242,0.24)] transition hover:-translate-y-0.5 hover:bg-[#4b22ce]"
           >
             Déposer une annonce
           </a>
           <a
             href="/dashboard/marche"
-            class="inline-flex items-center justify-center rounded-lg border border-white/22 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/16"
+            class="inline-flex items-center justify-center rounded-lg border border-violet-100 bg-white/80 px-5 py-3 text-sm font-semibold text-[#24152f] backdrop-blur transition hover:-translate-y-0.5 hover:bg-white"
           >
             Explorer le marché
           </a>
@@ -273,11 +273,14 @@
 
       <div class="grid content-end gap-3 sm:grid-cols-2 lg:pl-10">
         {#each stats.slice(0, 2) as stat}
-          <article class="rounded-lg border border-white/16 bg-white/12 p-4 text-white backdrop-blur transition hover:-translate-y-1 hover:bg-white/16">
+          <a
+            href={stat.href}
+            class="block rounded-lg border border-violet-100 bg-white/85 p-4 text-[#24152f] shadow-sm backdrop-blur transition hover:-translate-y-1 hover:bg-white"
+          >
             <div class="text-3xl font-semibold tracking-tight">{stat.value}</div>
             <div class="mt-1 text-sm font-semibold">{stat.label}</div>
-            <div class="mt-2 text-xs leading-5 text-white/62">{stat.helper}</div>
-          </article>
+            <div class="mt-2 text-xs leading-5 text-zinc-600">{stat.helper}</div>
+          </a>
         {/each}
       </div>
     </div>
@@ -291,7 +294,10 @@
 
   <section class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     {#each stats as stat}
-      <article class="group rounded-lg border border-violet-100 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(48,22,75,0.10)]">
+      <a
+        href={stat.href}
+        class="group block rounded-lg border border-violet-100 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(48,22,75,0.10)]"
+      >
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-zinc-500">{stat.label}</p>
@@ -319,7 +325,7 @@
             {stat.detail}
           </span>
         </div>
-      </article>
+      </a>
     {/each}
   </section>
 
@@ -442,7 +448,7 @@
       {:else if activity.length}
         <div class="divide-y divide-zinc-100">
           {#each activity as item}
-            <div class="group flex items-start gap-4 px-5 py-4 transition hover:bg-[#fbfaf8]">
+            <a href={item.href} class="group flex items-start gap-4 px-5 py-4 transition hover:bg-[#fbfaf8]">
               <div class={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-lg ring-1 ${activityIconClass(item.tone)}`}>
                 {#if item.type === 'message'}
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -463,7 +469,10 @@
                 <p class="mt-1 text-sm font-semibold text-zinc-800">{item.label}</p>
                 <p class="mt-1 truncate text-sm text-zinc-500">{item.detail}</p>
               </div>
-            </div>
+              <svg class="mt-0.5 h-4 w-4 shrink-0 self-center text-zinc-300 transition group-hover:translate-x-0.5 group-hover:text-violet-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+              </svg>
+            </a>
           {/each}
         </div>
       {:else}

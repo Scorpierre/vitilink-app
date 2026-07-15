@@ -19,14 +19,17 @@
       <div class="md:col-span-5">
         <div class="flex items-center gap-3">
           <img src="/logo/icon_vitilink.png" alt="" class="h-9 w-9 rounded-lg object-cover" />
-          <span class="text-lg font-semibold">VitiLink</span>
+          <div>
+            <div class="text-lg font-semibold tracking-tight">VitiLink</div>
+            <div class="text-xs font-medium text-white/50">Marketplace B2B viticole</div>
+          </div>
         </div>
         <p class="mt-4 max-w-md text-sm leading-7 text-white/65">
           Marketplace B2B viticole pour vendre et acheter raisin, moût et jus plus simplement. Projet EIP Epitech, promotion 2027.
         </p>
         <a
           href="/signUp"
-          class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#28153d] transition hover:-translate-y-0.5 hover:bg-violet-50"
+          class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] transition hover:-translate-y-0.5 hover:bg-violet-50"
         >
           Faire partie des testeurs
         </a>

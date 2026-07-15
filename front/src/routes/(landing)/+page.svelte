@@ -84,7 +84,7 @@
   <link rel="preload" as="video" href="/assets/videos/header.mp4" type="video/mp4" />
 </svelte:head>
 
-<main class="bg-[#fbfaf8] text-[#201927]">
+<main class="bg-[#fbfaf8] text-[#24152f]">
   <section class="relative isolate min-h-[110svh] overflow-hidden pt-[7.5rem] pb-28 lg:pt-36">
     <img
       src="/assets/images/header.jpg"
@@ -104,7 +104,6 @@
     >
       <source src="/assets/videos/header.mp4" type="video/mp4" />
     </video>
-    <div class="absolute inset-x-0 -top-10 -bottom-24 -z-10 bg-gradient-to-r from-black/75 via-[#2c1645]/40 to-black/10"></div>
     <div
       class="absolute inset-x-0 -bottom-56 -z-10 h-[34rem]"
       style="background: linear-gradient(to top, #fbfaf8 0%, rgba(248,242,234,0.92) 24%, rgba(251,250,248,0.48) 46%, rgba(251,250,248,0.14) 70%, transparent 100%);"
@@ -112,10 +111,6 @@
     <div
       class="absolute inset-x-0 -bottom-80 -z-10 h-96"
       style="background: linear-gradient(to top, #fbfaf8 0%, rgba(251,250,248,0.88) 42%, transparent 100%);"
-    ></div>
-    <div
-      class="absolute inset-x-0 bottom-0 -z-10 h-[34rem]"
-      style="background: linear-gradient(to top, rgba(20,11,28,0.30) 0%, rgba(20,11,28,0.18) 38%, transparent 78%);"
     ></div>
 
     <div class="mx-auto flex min-h-[calc(110svh-13rem)] max-w-6xl items-center px-4 sm:px-6 lg:px-8">
@@ -138,7 +133,7 @@
         <div class="mt-8 flex flex-wrap gap-3">
           <a
             href="#mvp"
-            class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-[#28153d] shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:bg-violet-50"
+            class="inline-flex items-center justify-center rounded-lg bg-[#5b2df2] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(91,45,242,0.24)] transition hover:-translate-y-0.5 hover:bg-[#4b22ce]"
           >
             Découvrir le MVP
           </a>
@@ -198,7 +193,7 @@
       <div class="mt-12 grid gap-4 md:grid-cols-3">
         {#each problems as problem, index}
           <article
-            class="reveal reveal-up rounded-lg border border-zinc-200 bg-[#fbfaf8] p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(54,31,88,0.10)]"
+            class="reveal reveal-up rounded-lg border border-violet-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(48,22,75,0.10)]"
             use:reveal
             style={`--delay: ${index * 90}ms`}
           >
@@ -211,7 +206,7 @@
     </div>
   </section>
 
-  <section id="solution" class="overflow-hidden bg-[#f4f1f6] py-20 lg:py-24">
+  <section id="solution" class="overflow-hidden bg-[#f3eef8] py-20 lg:py-24">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-12 lg:grid-cols-12 lg:items-center">
         <div class="lg:col-span-5 reveal reveal-left" use:reveal>
@@ -226,7 +221,7 @@
           <div class="mt-8 space-y-4">
             {#each solution as item, index}
               <article
-                class="reveal reveal-left rounded-lg border border-violet-200/70 bg-white p-5 shadow-sm"
+                class="reveal reveal-left rounded-lg border border-violet-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(48,22,75,0.10)]"
                 use:reveal
                 style={`--delay: ${index * 90}ms`}
               >
@@ -277,11 +272,11 @@
       <div class="mt-12 grid gap-4 md:grid-cols-4">
         {#each mvpSteps as step, index}
           <article
-            class="reveal reveal-up rounded-lg border border-zinc-200 bg-[#fbfaf8] p-6"
+            class="reveal reveal-up rounded-lg bg-[#fbfaf8] p-6 ring-1 ring-violet-100 transition hover:-translate-y-1 hover:bg-violet-50/70"
             use:reveal
             style={`--delay: ${index * 85}ms`}
           >
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-700 text-sm font-semibold text-white">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#5b2df2] text-sm font-semibold text-white">
               {index + 1}
             </div>
             <h3 class="mt-5 text-lg font-semibold text-[#24152f]">{step[0]}</h3>
@@ -299,7 +294,8 @@
       class="absolute inset-0 -z-20 h-full w-full object-cover"
       loading="lazy"
     />
-    <div class="absolute inset-0 -z-10 bg-[#1b1028]/85"></div>
+    <div class="absolute inset-0 -z-10 bg-[#24152f]/88"></div>
+    <div class="absolute inset-y-0 left-0 -z-10 w-[58%] bg-[radial-gradient(circle_at_18%_24%,rgba(139,92,246,0.28),transparent_34%)]"></div>
 
     <div class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
       <div class="lg:col-span-7 reveal reveal-left" use:reveal>
@@ -320,7 +316,7 @@
           </p>
           <a
             href="/signUp"
-            class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#28153d] transition hover:-translate-y-0.5 hover:bg-violet-50"
+            class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] transition hover:-translate-y-0.5 hover:bg-violet-50"
           >
             Demander un accès
           </a>

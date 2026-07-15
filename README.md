@@ -279,7 +279,7 @@ cat .env
 > Solution temporaire : commenter les lignes `volumes:` du service `backend` et `frontend` dans `docker-compose.yml` sur le serveur,
 > ou créer un `docker-compose.prod.yml` sans ces montages.
 
-### Procédure de déploiement (mises à jour)
+### Procédure de déploiement
 
 ```bash
 # ── En local ──────────────────────────────────────────────

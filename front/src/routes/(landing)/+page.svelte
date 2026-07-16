@@ -104,9 +104,10 @@
     >
       <source src="/assets/videos/header.mp4" type="video/mp4" />
     </video>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-[#160b21]/75 via-[#24152f]/45 to-[#24152f]/15"></div>
     <div
-      class="absolute inset-x-0 -bottom-56 -z-10 h-[34rem]"
-      style="background: linear-gradient(to top, #fbfaf8 0%, rgba(248,242,234,0.92) 24%, rgba(251,250,248,0.48) 46%, rgba(251,250,248,0.14) 70%, transparent 100%);"
+      class="absolute inset-x-0 -bottom-56 -z-10 h-[30rem]"
+      style="background: linear-gradient(to top, #fbfaf8 0%, rgba(248,242,234,0.92) 34%, rgba(251,250,248,0.4) 62%, transparent 86%);"
     ></div>
     <div
       class="absolute inset-x-0 -bottom-80 -z-10 h-96"
@@ -294,8 +295,8 @@
       class="absolute inset-0 -z-20 h-full w-full object-cover"
       loading="lazy"
     />
-    <div class="absolute inset-0 -z-10 bg-[#24152f]/88"></div>
-    <div class="absolute inset-y-0 left-0 -z-10 w-[58%] bg-[radial-gradient(circle_at_18%_24%,rgba(139,92,246,0.28),transparent_34%)]"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-br from-[#160b21]/95 via-[#24152f]/90 to-[#2c1743]/85"></div>
+    <div class="absolute inset-y-0 left-0 -z-10 w-[58%] bg-[radial-gradient(circle_at_18%_24%,rgba(139,92,246,0.28),transparent_40%)]"></div>
 
     <div class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
       <div class="lg:col-span-7 reveal reveal-left" use:reveal>
@@ -309,20 +310,20 @@
       </div>
 
       <div class="lg:col-span-4 lg:col-start-9 reveal reveal-right" use:reveal>
-        <div class="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur">
+        <div class="rounded-xl border border-white/15 bg-white/10 p-6 shadow-2xl shadow-black/40 backdrop-blur-md">
           <div class="text-sm font-semibold text-white">Accès pilote</div>
-          <p class="mt-3 text-sm leading-7 text-white/70">
+          <p class="mt-3 text-sm leading-7 text-white/75">
             Une demande, un échange terrain, puis un accès progressif à la beta.
           </p>
           <a
             href="/signUp"
-            class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] transition hover:-translate-y-0.5 hover:bg-violet-50"
+            class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#24152f] shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:bg-violet-50"
           >
             Demander un accès
           </a>
           <a
             href="mailto:contact@vitilink.app"
-            class="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            class="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/30 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/15"
           >
             Contacter l'équipe
           </a>

@@ -1,6 +1,9 @@
 # Dépendances
 node_modules
 
+# Vercel
+.vercel
+
 # Variables d'environnement
 .env
 .env.local

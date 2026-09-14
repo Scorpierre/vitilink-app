@@ -2,6 +2,7 @@
   import { onNavigate } from '$app/navigation';
   import '../app.css';
   import Toast from '$lib/components/app/Toast.svelte';
+  import DemoBanner from '$lib/components/app/DemoBanner.svelte';
 
   type ViewTransitionDocument = Document & {
     startViewTransition?: (callback: () => Promise<void> | void) => void;
@@ -22,5 +23,6 @@
   });
 </script>
 
+<DemoBanner />
 <slot />
 <Toast />

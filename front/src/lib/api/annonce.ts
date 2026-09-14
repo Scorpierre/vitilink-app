@@ -1,5 +1,7 @@
 import type { AnnonceListResponse, AnnonceResponse, CreateAnnonceBody } from '$lib/types';
 import { http } from './http';
+import { DEMO_MODE } from '$lib/demo/mode';
+import { createAnnonce as demoCreateAnnonce, updateAnnonce as demoUpdateAnnonce } from '$lib/demo/db';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
@@ -24,6 +26,13 @@ export const AnnonceAPI = {
     }),
 
   async create(body: CreateAnnonceBody) {
+    if (DEMO_MODE) {
+      const images = body.images.length
+        ? body.images.map((file) => URL.createObjectURL(file))
+        : (body.existingImages ?? []);
+      return demoCreateAnnonce({ ...annonceFieldsFromBody(body), images });
+    }
+
     const formData = buildAnnonceFormData(body);
 
     const res = await fetch(`${API_BASE}/annonces`, {
@@ -42,6 +51,14 @@ export const AnnonceAPI = {
   },
 
   async update(id: string, body: CreateAnnonceBody) {
+    if (DEMO_MODE) {
+      const images = [
+        ...(body.existingImages ?? []),
+        ...body.images.map((file) => URL.createObjectURL(file)),
+      ];
+      return demoUpdateAnnonce(id, { ...annonceFieldsFromBody(body), images });
+    }
+
     const formData = buildAnnonceFormData(body);
 
     const res = await fetch(`${API_BASE}/annonces/${id}/update`, {
@@ -59,6 +76,25 @@ export const AnnonceAPI = {
     return data as AnnonceResponse;
   }
 };
+
+function annonceFieldsFromBody(body: CreateAnnonceBody) {
+  return {
+    title: body.title,
+    productType: body.productType,
+    description: body.description,
+    price: body.price,
+    volume: body.volume,
+    volumeUnit: body.volumeUnit,
+    vintage: body.vintage,
+    location: body.location,
+    city: body.city,
+    region: body.region,
+    country: body.country,
+    availabilityTiming: body.availabilityTiming,
+    certifications: body.certifications,
+    restrictToVerified: body.restrictToVerified,
+  };
+}
 
 function buildAnnonceFormData(body: CreateAnnonceBody) {
   const formData = new FormData();

@@ -1,5 +1,7 @@
 import { http } from './http';
-import type { ApiResponse, DocumentItem } from '$lib/types';
+import type { ApiResponse, DocumentItem, DocumentType } from '$lib/types';
+import { DEMO_MODE } from '$lib/demo/mode';
+import { uploadEntrepriseDocument as demoUploadDocument } from '$lib/demo/db';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
@@ -9,7 +11,7 @@ export const DocumentAPI = {
 
   fileUrl: (path?: string) => {
     if (!path) return '';
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('blob:') || path.startsWith('/demo/')) return path;
     return `${API_BASE}${path}`;
   },
 
@@ -19,6 +21,10 @@ export const DocumentAPI = {
     }),
 
   async uploadEntrepriseDocument(file: File, type: string, label = '') {
+    if (DEMO_MODE) {
+      return demoUploadDocument(URL.createObjectURL(file), type as DocumentType, label);
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);

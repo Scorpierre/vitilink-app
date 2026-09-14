@@ -44,7 +44,7 @@ export const DEFAULT_CERTIFICATIONS = [
 
 export function imageUrl(path?: string) {
   if (!path) return '';
-  if (path.startsWith('http')) return path;
+  if (path.startsWith('http') || path.startsWith('blob:') || path.startsWith('/demo/')) return path;
   return `${API_BASE}${path}`;
 }
 
